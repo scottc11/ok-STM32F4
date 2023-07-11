@@ -1,6 +1,7 @@
 #pragma once
 
 #include "main.h"
+#include "tim_api.h"
 #include "Callback.h"
 #include "filters.h"
 #include "okSemaphore.h"
@@ -11,8 +12,23 @@
 #define ADC_DEFAULT_INPUT_MAX BIT_MAX_16
 #define ADC_DEFAULT_INPUT_MIN 0
 
+#define ADC_MAX_INSTANCES 16
+
+// if not defined, default to max number of ADC channels. This will take up more memory if not defined
 #ifndef ADC_DMA_BUFF_SIZE
-#define ADC_DMA_BUFF_SIZE 9
+#define ADC_DMA_BUFF_SIZE ADC_MAX_INSTANCES
+#endif
+
+#ifndef ADC_SAMPLE_RATE_HZ
+#define ADC_SAMPLE_RATE_HZ 2000
+#endif
+
+#ifndef ADC_TIM_PRESCALER
+#define ADC_TIM_PRESCALER 100
+#endif
+
+#ifndef ADC_TIM_PERIOD
+#define ADC_TIM_PERIOD 2000
 #endif
 
 /**
@@ -21,9 +37,10 @@
 class AnalogHandle
 {
 public:
-    AnalogHandle(PinName pin);
+    AnalogHandle(PinName _pin);
 
-    int index;
+    int index;         // represents position of sample data in DMA buffer array
+    PinName pin;
 
     okSemaphore denoisingSemaphore;
     okSemaphore sampleSemaphore;
@@ -61,12 +78,14 @@ public:
     void attachSamplingProgressCallback(Callback<void(uint16_t progress)> func);
     void detachSamplingProgressCallback();
 
+    static void initialize();
+    static void setSampleRate(uint32_t sample_rate_hz);
     static void sampleReadyTask(void *params);
     static void RouteConversionCompleteCallback();
 
     static uint16_t DMA_BUFFER[ADC_DMA_BUFF_SIZE];
-    static PinName ADC_PINS[ADC_DMA_BUFF_SIZE];
-    static AnalogHandle *_instances[ADC_DMA_BUFF_SIZE];
+    static AnalogHandle *ADC_INSTANCES[ADC_DMA_BUFF_SIZE];
+    static int num_adc_instances;
     static SemaphoreHandle_t semaphore;
 
 private:

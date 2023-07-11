@@ -48,6 +48,8 @@ GPIO_TypeDef * gpio_get_port(PinName pin) {
 
 void enable_adc_pin(PinName pin)
 {
+    __HAL_RCC_ADC1_CLK_ENABLE(); /* Peripheral clock enable */
+
     // enable gpio clock
     GPIO_TypeDef *port = gpio_enable_clock(pin);
 

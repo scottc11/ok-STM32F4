@@ -1,25 +1,25 @@
 #include "AnalogHandle.h"
 
-SemaphoreHandle_t AnalogHandle::semaphore;
-AnalogHandle *AnalogHandle::_instances[ADC_DMA_BUFF_SIZE] = {0};
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+TIM_HandleTypeDef htim3;
 
-AnalogHandle::AnalogHandle(PinName pin)
+SemaphoreHandle_t AnalogHandle::semaphore;
+AnalogHandle *AnalogHandle::ADC_INSTANCES[ADC_DMA_BUFF_SIZE] = {0};
+uint16_t AnalogHandle::DMA_BUFFER[ADC_DMA_BUFF_SIZE] = {0};
+int AnalogHandle::num_adc_instances = 0;
+
+AnalogHandle::AnalogHandle(PinName _pin)
 {
-    // iterate over static member ADC_PINS and match index to pin
-    for (int i = 0; i < ADC_DMA_BUFF_SIZE; i++)
-    {
-        if (pin == ADC_PINS[i])
-        {
-            index = i;
-            break;
-        }
-    }
+    pin = _pin;
+    num_adc_instances++;
     // Add constructed instance to the static list of instances (required for IRQ routing)
     for (int i = 0; i < ADC_DMA_BUFF_SIZE; i++)
     {
-        if (_instances[i] == NULL)
+        if (ADC_INSTANCES[i] == NULL)
         {
-            _instances[i] = this;
+            index = i;
+            ADC_INSTANCES[i] = this;
             break;
         }
     }
@@ -161,7 +161,7 @@ void AnalogHandle::sampleReadyTask(void *params)
     while (1)
     {
         xSemaphoreTake(AnalogHandle::semaphore, portMAX_DELAY);
-        for (auto ins : _instances)
+        for (auto ins : ADC_INSTANCES)
         {
             if (ins) // if instance not NULL
             {
@@ -249,4 +249,160 @@ void AnalogHandle::attachSamplingProgressCallback(Callback<void(uint16_t progres
 void AnalogHandle::detachSamplingProgressCallback()
 {
     samplingProgressCallback = NULL;
+}
+
+/**
+ * @brief Static member function which must be called in main() in order for ADC to work
+ * Initializes ADC, DMA, and TIM peripherals
+ */
+void AnalogHandle::initialize()
+{
+    // initialize DMA
+    __HAL_RCC_DMA2_CLK_ENABLE(); /* DMA controller clock enable */
+    
+    HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0); /* DMA2_Stream0_IRQn interrupt configuration */
+    HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn); /* DMA interrupt init */
+
+    
+    // initalize ADC1 and pins
+    for (int i = 0; i < num_adc_instances; i++) // note: using static member prevents initializing unwanted pins
+    {
+        if (ADC_INSTANCES[i] != NULL) {
+            enable_adc_pin(ADC_INSTANCES[i]->pin);
+        }
+    }
+
+    /* ADC1 DMA Init */
+    hdma_adc1.Instance = DMA2_Stream0;
+    hdma_adc1.Init.Channel = DMA_CHANNEL_0;
+    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_adc1.Init.Mode = DMA_CIRCULAR;
+    hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    HAL_DMA_Init(&hdma_adc1);
+
+    __HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
+
+    // Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+    // NOTE: Important to set EOCSelection to "EOC Flag at the end of all converions" if you want to continuously read the ADC, otherwise the ADC will only do a single conversion
+    hadc1.Instance = ADC1;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+    hadc1.Init.ScanConvMode = ENABLE;
+    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.DiscontinuousConvMode = DISABLE;
+    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+    hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T3_TRGO;
+    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    hadc1.Init.NbrOfConversion = ADC_DMA_BUFF_SIZE; // suspicious... should this be ADC_DMA_BUFF_SIZE?
+    hadc1.Init.DMAContinuousRequests = ENABLE;
+    hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+    HAL_ADC_Init(&hadc1);
+
+    // Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    ADC_ChannelConfTypeDef sConfig = {0};
+    for (int i = 0; i < num_adc_instances; i++)
+    {
+        // get alternate function
+        uint32_t channel;
+        for (int y = 0; y < ADC_MAX_INSTANCES; y++)
+        {
+            if (ADC_INSTANCES[i]->pin == ADC_PIN_MAP[y].pin)
+            {
+                channel = ADC_PIN_MAP[y].channel;
+                break;
+            }
+        }
+        
+        sConfig.Channel = channel;
+        sConfig.Rank = ADC_INSTANCES[i]->index + 1;
+        sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+        HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+    }
+
+    // initialize TIM3
+    __HAL_RCC_TIM3_CLK_ENABLE();
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    htim3.Instance = TIM3;
+    htim3.Init.Prescaler = ADC_TIM_PRESCALER;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim3.Init.Period = ADC_TIM_PERIOD;
+    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    HAL_TIM_Base_Init(&htim3);
+
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig);
+
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
+
+    // set sample rate
+    setSampleRate(ADC_SAMPLE_RATE_HZ);
+
+    // create semaphore
+    AnalogHandle::semaphore = xSemaphoreCreateBinary();
+
+    // create sample ready task
+    xTaskCreate(AnalogHandle::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
+
+    // start timer
+    HAL_TIM_Base_Start(&htim3);
+    
+    // start ADC in DMA mode
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogHandle::DMA_BUFFER, ADC_DMA_BUFF_SIZE);
+}
+
+void AnalogHandle::setSampleRate(uint32_t sample_rate_hz)
+{
+    switch (hadc1.Init.ClockPrescaler)
+    {
+    case ADC_CLOCK_SYNC_PCLK_DIV2:
+        tim_set_overflow_freq(&htim3, sample_rate_hz * 2);
+        break;
+    case ADC_CLOCK_SYNC_PCLK_DIV4:
+        tim_set_overflow_freq(&htim3, sample_rate_hz * 4);
+        break;
+    case ADC_CLOCK_SYNC_PCLK_DIV6:
+        tim_set_overflow_freq(&htim3, sample_rate_hz * 6);
+        break;
+    case ADC_CLOCK_SYNC_PCLK_DIV8:
+        tim_set_overflow_freq(&htim3, sample_rate_hz * 8);
+        break;
+    default:
+        tim_set_overflow_freq(&htim3, sample_rate_hz * 2);
+        break;
+    }
+}
+
+/**
+ * @brief This function handles DMA2 stream0 global interrupt.
+ * NOTE: This must be declared when using an interupt peripheral.
+ * When there is an interrupt for which no handler exists, "Default_Handler" will be called and put the system in an inifinite loop
+ */
+extern "C" void DMA2_Stream0_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_adc1);
+}
+
+/**
+ * @brief  Regular conversion complete callback in non blocking mode
+ * @param  hadc pointer to a ADC_HandleTypeDef structure that contains
+ *         the configuration information for the specified ADC.
+ * @retval None
+ */
+extern "C" void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+    if (hadc->Instance == ADC1)
+    {
+        AnalogHandle::RouteConversionCompleteCallback();
+    }
 }
