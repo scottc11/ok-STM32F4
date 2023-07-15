@@ -74,6 +74,9 @@ void SPI::write(uint8_t *data, int length)
     HAL_StatusTypeDef status;
     _slaveSelect.write(0);
     status = HAL_SPI_Transmit(&_hspi, (uint8_t *)data, length, HAL_MAX_DELAY);
+    if (status != HAL_OK) {
+        error_handler(status);
+    }
     _slaveSelect.write(1);
     _mutex.unlock();
 }
