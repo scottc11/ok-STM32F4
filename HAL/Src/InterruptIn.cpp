@@ -17,7 +17,7 @@ void InterruptIn::init() {
 }
 
 int InterruptIn::read() {
-    return gpio_read_pin(_pin);
+    return (int)gpio_read_pin(_pin);
 };
 
 /**
@@ -33,9 +33,7 @@ void InterruptIn::rise(Callback<void()> func)
     if (func) {
         riseCallback = func;
     }
-    _event = IRQ_EVENT_RISE;
-    gpio_irq_set(_pin, IRQ_EVENT_FALL, false); // disable fall event
-    gpio_irq_set(_pin, _event, true);
+    gpio_irq_set(_pin, IRQ_EVENT_RISE, true);
 }
 void InterruptIn::fall(Callback<void()> func)
 {
@@ -43,18 +41,19 @@ void InterruptIn::fall(Callback<void()> func)
     {
         fallCallback = func;
     }
-    _event = IRQ_EVENT_FALL;
-    gpio_irq_set(_pin, IRQ_EVENT_RISE, false); // disable rise event
-    gpio_irq_set(_pin, _event, true);
+    gpio_irq_set(_pin, IRQ_EVENT_FALL, true);
 }
 
 void InterruptIn::handleInterupt() {
-    if (this->_event == IRQ_EVENT_RISE) {
-        if (riseCallback) {
+    int pin_state = this->read();
+    if (pin_state) {
+        if (riseCallback)
+        {
             riseCallback();
         }
-    } else if (this->_event == IRQ_EVENT_FALL) {
-        if (fallCallback) {
+    } else {
+        if (fallCallback)
+        {
             fallCallback();
         }
     }
@@ -70,7 +69,7 @@ void InterruptIn::gpio_irq_init(PinName pin)
     GPIO_InitStruct.Pin = _pin_num;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     set_pin_pull(&GPIO_InitStruct, _pull);
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 
     HAL_GPIO_Init(_port, &GPIO_InitStruct);
 
