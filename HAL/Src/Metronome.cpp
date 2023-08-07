@@ -1,16 +1,16 @@
-#include "SuperClock.h"
+#include "Metronome.h"
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
-SuperClock *SuperClock::instance = NULL;
+Metronome *Metronome::instance = NULL;
 
-void SuperClock::init() {
+void Metronome::init() {
     this->initTIM2(40, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
     this->initTIM4(40, 10000 - 1);
 }
 
-void SuperClock::start()
+void Metronome::start()
 {
     HAL_StatusTypeDef status;
     status = HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
@@ -19,7 +19,7 @@ void SuperClock::start()
     error_handler(status);
 }
 
-void SuperClock::reset()
+void Metronome::reset()
 {
     __HAL_TIM_SetCounter(&htim2, 0); // not certain this has to happen, just assuming
     __HAL_TIM_SetCounter(&htim4, 0);
@@ -27,7 +27,7 @@ void SuperClock::reset()
     this->step = 0;
 }
 
-void SuperClock::setStepsPerBar(int steps) {
+void Metronome::setStepsPerBar(int steps) {
     if (steps < 3) {
         return;
     } else if (steps > 7) {
@@ -42,7 +42,7 @@ void SuperClock::setStepsPerBar(int steps) {
  * @param prescaler setting to 1 should be best
  * @param period setting to 65535 should be best
 */
-void SuperClock::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32-bit timer? This could greatly increase the resolution of frequency detection.
+void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32-bit timer? This could greatly increase the resolution of frequency detection.
 {
     __HAL_RCC_TIM2_CLK_ENABLE(); // turn on timer clock
 
@@ -89,7 +89,7 @@ void SuperClock::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 3
         error_handler(status);
 }
 
-void SuperClock::initTIM4(uint16_t prescaler, uint16_t period)
+void Metronome::initTIM4(uint16_t prescaler, uint16_t period)
 {
     __HAL_RCC_TIM4_CLK_ENABLE();
 
@@ -122,7 +122,7 @@ void SuperClock::initTIM4(uint16_t prescaler, uint16_t period)
  * @param max the maximum ADC input value
  * @param value this value gets inverted
  */
-uint16_t SuperClock::convertADCReadToTicks(uint16_t min, uint16_t max, uint16_t value)
+uint16_t Metronome::convertADCReadToTicks(uint16_t min, uint16_t max, uint16_t value)
 {
     value = (max - value) + min; // invert
     uint16_t ticks = map_num_in_range<uint16_t>(value, min, max, MIN_TICKS_PER_PULSE, MAX_TICKS_PER_PULSE);
@@ -134,7 +134,7 @@ uint16_t SuperClock::convertADCReadToTicks(uint16_t min, uint16_t max, uint16_t 
  * 
  * @param ticks 
  */
-void SuperClock::setPulseFrequency(uint32_t ticks)
+void Metronome::setPulseFrequency(uint32_t ticks)
 {
     ticksPerPulse = ticks; // store for debugging reference
     __HAL_TIM_SetAutoreload(&htim4, ticks);
@@ -157,7 +157,7 @@ void SuperClock::setPulseFrequency(uint32_t ticks)
  * This means the sequence could technically get several beats ahead of any other gear.
  * To handle this, you could prevent the next sequence step from occuring if all sub-steps of the current step have been executed prior to a new IC event
  */
-void SuperClock::handleInputCaptureCallback()
+void Metronome::handleInputCaptureCallback()
 {
     // almost always, there will need to be at least 1 pulse not yet executed prior to an input capture, 
     // so you must execute all remaining until
@@ -180,14 +180,14 @@ void SuperClock::handleInputCaptureCallback()
     if (input_capture_callback) input_capture_callback();
 }
 
-void SuperClock::enableInputCaptureISR()
+void Metronome::enableInputCaptureISR()
 {
     externalInputMode = true;
     // HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
 
-void SuperClock::disableInputCaptureISR()
+void Metronome::disableInputCaptureISR()
 {
     externalInputMode = false;
     // HAL_TIM_IC_Stop(&htim2, TIM_CHANNEL_4);
@@ -199,7 +199,7 @@ void SuperClock::disableInputCaptureISR()
  * @brief this callback gets called everytime TIM4 overflows.
  * Increments pulse counter
 */ 
-void SuperClock::handleOverflowCallback()
+void Metronome::handleOverflowCallback()
 {
     if (ppqnCallback)
         ppqnCallback(pulse); // when clock inits, this ensures the 0ith pulse will get handled
@@ -229,26 +229,26 @@ void SuperClock::handleOverflowCallback()
     }
 }
 
-void SuperClock::attachInputCaptureCallback(Callback<void()> func)
+void Metronome::attachInputCaptureCallback(Callback<void()> func)
 {
     input_capture_callback = func;
 }
 
-void SuperClock::attachPPQNCallback(Callback<void(uint8_t pulse)> func)
+void Metronome::attachPPQNCallback(Callback<void(uint8_t pulse)> func)
 {
     ppqnCallback = func;
 }
 
-void SuperClock::attachResetCallback(Callback<void(uint8_t pulse)> func)
+void Metronome::attachResetCallback(Callback<void(uint8_t pulse)> func)
 {
     resetCallback = func;
 }
 
-void SuperClock::attachBarResetCallback(Callback<void()> func) {
+void Metronome::attachBarResetCallback(Callback<void()> func) {
     barResetCallback = func;
 }
 
-void SuperClock::RouteOverflowCallback(TIM_HandleTypeDef *htim)
+void Metronome::RouteOverflowCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim4)
     {
@@ -256,7 +256,7 @@ void SuperClock::RouteOverflowCallback(TIM_HandleTypeDef *htim)
     }
 }
 
-void SuperClock::RouteCaptureCallback(TIM_HandleTypeDef *htim)
+void Metronome::RouteCaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM2)
     {
@@ -285,12 +285,12 @@ extern "C" void TIM4_IRQHandler(void)
   * @note   This function is called  when TIM5 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
   * a global variable "uwTick" used as application time base.
-  * @note   Function addionally calls SuperClock static function for instance specific code
+  * @note   Function addionally calls Metronome static function for instance specific code
   * @param  htim : TIM handle
   * @retval None
   */
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    SuperClock::RouteOverflowCallback(htim);
+    Metronome::RouteOverflowCallback(htim);
     if (htim->Instance == TIM5)
     {
         HAL_IncTick();
@@ -302,5 +302,5 @@ extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 */ 
 extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-    SuperClock::RouteCaptureCallback(htim);
+    Metronome::RouteCaptureCallback(htim);
 }

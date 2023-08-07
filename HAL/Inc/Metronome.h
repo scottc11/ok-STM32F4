@@ -26,7 +26,7 @@ extern TIM_HandleTypeDef htim4; // 16-bit timer
 extern "C" void TIM2_IRQHandler(void);
 extern "C" void TIM4_IRQHandler(void);
 
-class SuperClock {
+class Metronome {
 public:
 
     int pulse;              // the current PPQN
@@ -48,7 +48,7 @@ public:
      * TODO: initial inputCapture value should be the product of TIM1 and TIM2 prescaler values combined with 120 BPM
      * so that the sequencer always gets initialized at 120 bpm, no matter the speed of the timers
     */
-    SuperClock()
+    Metronome()
     {
         instance = this;
         ticksPerStep = 11129;
@@ -85,5 +85,5 @@ public:
     static void RouteCaptureCallback(TIM_HandleTypeDef *htim);
 
 private:
-    static SuperClock *instance;
+    static Metronome *instance;
 };
