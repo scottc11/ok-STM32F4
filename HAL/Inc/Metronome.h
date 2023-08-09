@@ -61,6 +61,7 @@ public:
     void initTIM4(uint16_t prescaler, uint16_t period);
 
     void start();
+    void stop();
     void reset();
     void setStepsPerBar(int steps);
     void handleStep();

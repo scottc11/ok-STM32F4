@@ -13,11 +13,17 @@ void Metronome::init()
 
 void Metronome::start()
 {
+    this->reset();
     HAL_StatusTypeDef status;
     status = HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
     error_handler(status);
     status = HAL_TIM_Base_Start_IT(&htim4);
     error_handler(status);
+}
+
+void Metronome::stop() {
+    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_4);
+    HAL_TIM_Base_Stop_IT(&htim4);
 }
 
 void Metronome::reset()
