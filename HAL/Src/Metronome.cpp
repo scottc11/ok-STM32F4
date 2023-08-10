@@ -31,7 +31,14 @@ void Metronome::reset()
     __HAL_TIM_SetCounter(&htim2, 0); // not certain this has to happen, just assuming
     __HAL_TIM_SetCounter(&htim4, 0);
     this->pulse = 0;
-    this->step = 0;
+    if (externalInputMode)
+    {
+        this->step = 99; // this is a hack so that handleStep in the input capture interrupt causes an overflow back to 0
+    }
+    else
+    {
+        this->step = 0;
+    }
 }
 
 void Metronome::setStepsPerBar(int steps)
@@ -47,6 +54,20 @@ void Metronome::setStepsPerBar(int steps)
     else
     {
         stepsPerBar = steps;
+    }
+}
+
+void Metronome::handleStep()
+{
+    if (step < stepsPerBar - 1)
+    {
+        step++;
+    }
+    else
+    {
+        step = 0;
+        if (barResetCallback)
+            barResetCallback();
     }
 }
 
@@ -174,8 +195,9 @@ void Metronome::handleInputCaptureCallback()
 {
     // almost always, there will need to be at least 1 pulse not yet executed prior to an input capture,
     // so you must execute all remaining until
-    if (pulse < PPQN)
+    if (pulse < PPQN - 1)
     {
+        handleStep();
         if (resetCallback)
         {
             resetCallback(pulse);
@@ -233,22 +255,14 @@ void Metronome::handleOverflowCallback()
     {
         if (externalInputMode)
         {
-            __HAL_TIM_DISABLE(&htim4); // halt TIM4
             // external input will reset pulse to 0 and resume TIM4 in input capture callback
+            __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs
+            handleStep();
         }
         else
         {
             pulse = 0;
-            if (step < stepsPerBar - 1)
-            {
-                step++;
-            }
-            else
-            {
-                step = 0;
-                if (barResetCallback)
-                    barResetCallback();
-            }
+            handleStep();
         }
     }
 }
