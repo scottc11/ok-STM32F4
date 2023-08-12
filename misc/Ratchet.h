@@ -3,6 +3,10 @@
 #include "main.h"
 #include "Callback.h"
 
+#ifndef PPQN
+#define PPQN 96
+#endif
+
 #define RATCHET_DIV_1 PPQN / 1
 #define RATCHET_DIV_2 PPQN / 2
 #define RATCHET_DIV_3 PPQN / 3
