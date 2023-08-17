@@ -83,6 +83,7 @@ public:
     void reset();
     bool connected();
     bool padIsTouched();
+    bool padIsTouched(uint8_t pad);
 
     uint16_t handleTouch();
     uint16_t readPads();
