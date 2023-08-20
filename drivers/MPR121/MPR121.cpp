@@ -175,6 +175,15 @@ bool MPR121::padIsTouched()
     }
 }
 
+bool MPR121::padIsTouched(uint8_t pad)
+{
+    if (bitwise_read_bit(this->getCurrTouched(), pad)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 /**
  * @brief The interrupt handler for the IRQ pin
  * if callback present, executes the callback, else, sets an interrupt flag

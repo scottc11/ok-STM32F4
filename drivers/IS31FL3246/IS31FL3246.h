@@ -27,6 +27,7 @@ public:
     
     uint8_t address;
     I2C *i2c;
+    bool isConnected = false;
 
     void init();
     void setControlRegister(bool shutdown, bool bit_mode, uint8_t freq, bool RGB_mode);
@@ -55,6 +56,15 @@ private:
         commands[1] = _data1;
 
         i2c->write(address, commands, 2);
+    }
+
+    uint16_t readRegister(char reg)
+    {
+        uint8_t buffer[2];
+        buffer[0] = reg;
+        i2c->write(address, buffer, 1, true);
+        i2c->read(address, buffer, 1);
+        return buffer[0];
     }
 
     enum Registers

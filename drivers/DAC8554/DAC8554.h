@@ -9,10 +9,13 @@
 
 #include "SPI.h"
 
-#define DAC8554_BUFFER_WRITE  0b00000000
-#define DAC8554_SINGLE_WRITE  0b00010000
-#define DAC8554_ALL_WRITE     0b00100000
-#define DAC8554_BROADCAST     0b00110000
+#define DAC85X4_BUFFER_WRITE  0b00000000
+#define DAC85X4_SINGLE_WRITE  0b00010000
+#define DAC85X4_ALL_WRITE     0b00100000
+#define DAC85X4_BROADCAST     0b00110000
+#define DAC85X4_SET_INTERNAL_REFERENCE 0b00000001
+#define DAC85X4_INTERNAL_REFERENCE_ENABLED 0x0
+#define DAC85X4_INTERNAL_REFERENCE_DISABLED 0x2000
 
 class DAC8554 {
 
@@ -38,7 +41,8 @@ public:
   }
   
   void init();
-  void write(DAC8554::Channel chan, uint16_t value, uint8_t mode = DAC8554_SINGLE_WRITE);
+  void write(DAC8554::Channel chan, uint16_t value, uint8_t mode = DAC85X4_SINGLE_WRITE);
+  void setInternalVoltageReference(bool enabled);
 
 private:
   

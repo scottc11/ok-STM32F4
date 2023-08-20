@@ -41,6 +41,12 @@ void IS31FL3246::setControlRegister(bool shutdown, bool bit_mode, uint8_t freq, 
     config = bitwise_write_bit(config, 6, RGB_mode);
 
     writeRegister(Registers::CONTROL_REG, config);
+
+    uint8_t connected = readRegister(Registers::CONTROL_REG);
+    if (connected == config)
+    {
+        isConnected = true;
+    }
 }
 
 /**

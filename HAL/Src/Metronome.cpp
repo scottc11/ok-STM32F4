@@ -43,18 +43,8 @@ void Metronome::reset()
 
 void Metronome::setStepsPerBar(int steps)
 {
-    if (steps < 3)
-    {
-        return;
-    }
-    else if (steps > 7)
-    {
-        return;
-    }
-    else
-    {
-        stepsPerBar = steps;
-    }
+    if (steps < 3 || steps > 7) return;
+    stepsPerBar = steps;
 }
 
 void Metronome::handleStep()
