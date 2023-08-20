@@ -3,6 +3,9 @@
 InterruptIn *InterruptIn::_instances[NUM_GPIO_IRQ_INSTANCES] = {0};
 
 void InterruptIn::init() {
+    if (_pin == NC) {
+        return;
+    }
     gpio_irq_init(_pin);
 
     // push new instance onto static instances array
