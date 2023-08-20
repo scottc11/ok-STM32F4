@@ -15,6 +15,13 @@
 #define RATCHET_DIV_8 PPQN / 8
 #define RATCHET_DIV_12 PPQN / 12
 #define RATCHET_DIV_16 PPQN / 16
+#define RATCHET_DIV_24 PPQN / 24
+
+struct RatchetRate
+{
+    uint8_t rate;
+    uint16_t threshold;
+};
 
 class Ratchet
 {
@@ -27,12 +34,13 @@ public:
     uint16_t input_idle;             // when input equals this, not ratcheting takes place
     uint16_t input_min;              // when input equals this, ratcheting is at max rate
     uint16_t input_max;              // when input equals this, ratcheting is at min rate
-    uint16_t ratchetThresholds[8];
+    uint8_t num_thresholds;
+    RatchetRate thresholds[9];
     uint8_t currRatchetRate;
     uint8_t prevRatchetRate;
 
     void init(uint16_t idle, uint16_t min, uint16_t max);
-    void setRatchetThresholds(uint16_t idle, uint16_t min, uint16_t max);
+    void setThresholds(uint16_t idle, uint16_t min, uint16_t max);
     uint8_t calculateRatchet(uint16_t input);
     bool handleRatchet(int position, uint16_t input);
 
