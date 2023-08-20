@@ -39,6 +39,8 @@ void Metronome::reset()
     {
         this->step = 0;
     }
+    if (resetCallback)
+        resetCallback(pulse);
 }
 
 void Metronome::setStepsPerBar(int steps)
@@ -188,9 +190,9 @@ void Metronome::handleInputCaptureCallback()
     if (pulse < PPQN - 1)
     {
         handleStep();
-        if (resetCallback)
+        if (correctionCallback)
         {
-            resetCallback(pulse);
+            correctionCallback(pulse);
         }
     }
 
@@ -257,6 +259,24 @@ void Metronome::handleOverflowCallback()
     }
 }
 
+void Metronome::handleTransportInterruptPPQN()
+{
+    if (externalPulseMode)
+    {
+        this->handleOverflowCallback();
+    }
+}
+
+void Metronome::enableExternalPulseMode(bool enable) {
+    externalPulseMode = enable;
+    if (enable == true) {
+        HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_4);
+        HAL_TIM_Base_Stop_IT(&htim4);
+        extPulseInput.rise(callback(this, &Metronome::handleTransportInterruptPPQN));
+        extResetInput.rise(callback(this, &Metronome::reset));
+    }
+}
+
 void Metronome::attachInputCaptureCallback(Callback<void()> func)
 {
     input_capture_callback = func;
@@ -265,6 +285,11 @@ void Metronome::attachInputCaptureCallback(Callback<void()> func)
 void Metronome::attachPPQNCallback(Callback<void(uint8_t pulse)> func)
 {
     ppqnCallback = func;
+}
+
+void Metronome::attachStepCallback(Callback<void(uint16_t step)> func)
+{
+    stepCallback = func;
 }
 
 void Metronome::attachResetCallback(Callback<void(uint8_t pulse)> func)
@@ -277,6 +302,16 @@ void Metronome::attachBarResetCallback(Callback<void()> func)
     barResetCallback = func;
 }
 
+void Metronome::attachCorrectionCallback(Callback<void(uint8_t pulse)> func)
+{
+    correctionCallback = func;
+}
+
+/**
+ * @brief static function to handle timer period ellapsed interrupt
+ * 
+ * @param htim 
+ */
 void Metronome::RouteOverflowCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim4)
@@ -285,6 +320,12 @@ void Metronome::RouteOverflowCallback(TIM_HandleTypeDef *htim)
     }
 }
 
+
+/**
+ * @brief static function to handle timer input capture interrupt
+ * 
+ * @param htim 
+ */
 void Metronome::RouteCaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM2)
