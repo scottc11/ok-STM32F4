@@ -85,6 +85,11 @@ public:
     bool padIsTouched();
     bool padIsTouched(uint8_t pad);
 
+    void setTouchThreshold(uint8_t threshold);
+    void setReleaseThreshold(uint8_t threshold);
+    void setElectrodeChargeCurrent(uint8_t sample_count, uint8_t charge_current);
+    void setElectrodeChargeTime(uint8_t value);
+
     uint16_t handleTouch();
     uint16_t readPads();
     uint16_t getCurrTouched();
@@ -274,7 +279,7 @@ private:
     CDT_CONFIG = 0x5D, // Filter/Global CDT Configuration
     ECR,               // Electrode Configuration
 
-    CDC0, // ELE0 Electrode Current
+    CDC0 = 0x5F,       // ELE0 Electrode Current
     CDC1 = 0x60,
     CDC2,
     CDC3,
