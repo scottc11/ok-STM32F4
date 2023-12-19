@@ -128,12 +128,14 @@ uint16_t MPR121::handleTouch() {
             // it if *is* touched and *wasnt* touched before, execute callback
             if (bitwise_read_bit(currTouched, i) && !bitwise_read_bit(prevTouched, i))
             {
+                addNode(&touchedHead, i);
                 if (touchedCallback) touchedCallback(i);
             }
 
             // if it *was* touched and now *isnt*, execute callback
             if (!bitwise_read_bit(currTouched, i) && bitwise_read_bit(prevTouched, i))
             {
+                removeNode(&touchedHead, i);
                 if (releasedCallback) releasedCallback(i);
             }
         }
@@ -182,6 +184,102 @@ bool MPR121::padIsTouched(uint8_t pad)
     } else {
         return false;
     }
+}
+
+struct MPR121::TouchedNode *MPR121::createNode(uint8_t pad)
+{
+    struct TouchedNode *newNode = (struct TouchedNode *)pvPortMalloc(sizeof(struct TouchedNode));
+    if (newNode != NULL)
+    {
+        newNode->pad = pad;
+        newNode->next = NULL;
+        newNode->prev = NULL;
+    }
+    return newNode;
+}
+
+struct MPR121::TouchedNode *MPR121::getNode(struct TouchedNode **head, uint8_t pad)
+{
+    struct TouchedNode *temp = *head;
+    while (temp != NULL)
+    {
+        if (temp->pad == pad)
+        {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    return NULL;
+}
+
+void MPR121::addNode(struct TouchedNode **head, uint8_t pad)
+{
+    struct TouchedNode *newNode = createNode(pad);
+    if (*head == NULL)
+    {
+        *head = newNode;
+    }
+    else
+    {
+        struct TouchedNode *temp = *head;
+        while (temp->next != NULL)
+        {
+            temp = temp->next;
+        }
+        temp->next = newNode;
+        newNode->prev = temp;
+    }
+}
+
+void MPR121::removeNode(struct TouchedNode **head, uint8_t pad)
+{
+    struct TouchedNode *nodeToRemove = getNode(head, pad);
+
+    if (*head == NULL || nodeToRemove == NULL)
+        return;
+
+    if (nodeToRemove->prev != NULL)
+    {
+        nodeToRemove->prev->next = nodeToRemove->next;
+    }
+    else
+    {
+        *head = nodeToRemove->next;
+    }
+
+    if (nodeToRemove->next != NULL)
+    {
+        nodeToRemove->next->prev = nodeToRemove->prev;
+    }
+
+    vPortFree(nodeToRemove);
+}
+
+void MPR121::freeList(struct TouchedNode *head)
+{
+    while (head != NULL)
+    {
+        struct TouchedNode *temp = head;
+        head = head->next;
+        vPortFree(temp);
+    }
+}
+
+/**
+ * @brief When multiple pads are touched, return the most recent pad which was touched
+ *
+ * @return uint8_t pad index, or 0xFF if no pads are touched
+ */
+uint8_t MPR121::getLastTouchedNode()
+{
+    if (touchedHead == NULL)
+        return MPR121_NO_PADS_TOUCHED; // return 0xFF if no pads are touched
+    struct TouchedNode *temp = touchedHead;
+    while (temp->next != NULL)
+    {
+        temp = temp->next;
+    }
+    return temp->pad;
 }
 
 /**

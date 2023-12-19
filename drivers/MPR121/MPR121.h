@@ -53,6 +53,8 @@ int main() {
 #include "Callback.h"
 #include "InterruptIn.h"
 
+#define MPR121_NO_PADS_TOUCHED 0xFF
+
 /**
  *  @class MPR121
  *  @brief API for the MPR121 capacitive touch IC
@@ -69,6 +71,12 @@ public:
         ADDR_VDD,        /*!< ADDR connected to VDD */
         ADDR_SDA,        /*!< ADDR connected to SDA */
         ADDR_SCL         /*!< ADDR connected to SCL */
+    };
+
+    struct TouchedNode {
+      uint8_t pad;
+      struct TouchedNode *next;
+      struct TouchedNode *prev;
     };
 
     MPR121(I2C *i2c_ptr, PinName irq_pin, MPR121_ADDR i2c_addr = ADDR_VSS) : irq(irq_pin, PullUp) { // pull-up?
@@ -89,6 +97,7 @@ public:
     uint16_t readPads();
     uint16_t getCurrTouched();
     uint16_t getPrevTouched();
+    uint8_t getLastTouchedNode();
     bool interruptDetected();
     int readInterruptPin();
 
@@ -108,6 +117,14 @@ private:
   volatile bool interrupt{false};
   uint16_t currTouched{0};
   uint16_t prevTouched{0};
+  
+  TouchedNode *touchedHead{NULL}; // Linked List to record the sequence / order the pads were touched
+
+  TouchedNode *createNode(uint8_t pad);
+  void addNode(struct TouchedNode **head, uint8_t pad);
+  void removeNode(struct TouchedNode **head, uint8_t pad);
+  TouchedNode *getNode(struct TouchedNode **head, uint8_t pad);
+  void freeList(struct TouchedNode *head);
 
   Callback<void(uint8_t pad)> touchedCallback;
   Callback<void(uint8_t pad)> releasedCallback;
