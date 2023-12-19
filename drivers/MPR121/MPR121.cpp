@@ -1,6 +1,15 @@
-
-
 #include "MPR121.h"
+
+/**
+ * @brief
+ *  
+ *  there are two elements that can be configured to yield a wide range of capacitance readings
+    ranging from 0.455 pF to 2874.39 pF. The two configurable components are the electrode charge current and the electrode
+    charge time. The electrode charge current can be configured to equal a range of values between 1 μA and 63 μA. This value is
+    set in the Charge Discharge Current (CDC) in the Analog Front End AFE Configuration register. The electrode charge time can
+    be configured to equal a range of values between 500 ns and 32 μS. This value is set in the Charge Discharge Time (CDT) in
+    the Filter Configuration Register.
+*/
 
 /**
  * Clear state variables and initilize the dependant objects
@@ -49,6 +58,67 @@ void MPR121::init(void)
     MPR121::writeRegister(ECR, 0x8f);
 
     irq.fall(callback(this, &MPR121::irq_handler)); // and attach the interrupt handler
+}
+
+/**
+ * @brief Set Touch Threshold
+ * 
+ * @param threshold 
+ */
+void MPR121::setTouchThreshold(uint8_t threshold)
+{
+    for (int i = 0; i < (12 * 2); i += 2)
+    {
+        writeRegister(E0TTH + i, threshold);
+    }
+}
+
+/**
+ * @brief Set Release Threshold
+ * 
+ * @param threshold 
+ */
+void MPR121::setReleaseThreshold(uint8_t threshold)
+{
+    for (int i = 0; i < (12 * 2); i += 2)
+    {
+        writeRegister(E0RTH + i, threshold);
+    }
+}
+
+/**
+ * @brief The electrode charge current can be configured to equal a range of values between 1 μA and 63 μA.
+ * This value is set in the Charge Discharge Current (CDC) in the Analog Front End AFE Configuration register.
+ *
+ * First Filter Iterations – The first filter iterations field selects the number of samples taken as input to the first level of filtering.
+    00 Encoding 0 – Sets samples taken to 6
+    01 Encoding 1 – Sets samples taken to 10
+    10 Encoding 2 – Sets samples taken to 18
+    11 Encoding 3 – Sets samples taken to 34
+ *
+ * Charge Discharge Current – The Charge Discharge Current field selects the supply current to be used when charging and discharging an electrode.
+   000000 Encoding 0 – Disables Electrode Charging
+   000001 Encoding 1 – Sets the current to 1μA ~ 111111 Encoding 63 – Sets the current to 63 μA
+ * @param sample_count 0..3
+ * @param charge_current 0..63
+ */
+void MPR121::setElectrodeChargeCurrent(uint8_t sample_count, uint8_t charge_current)
+{
+    sample_count = sample_count > 3 ? 3 : sample_count;
+    charge_current = charge_current > 63 ? 63 : charge_current;
+    uint8_t config = (sample_count << 6) | charge_current;
+    writeRegister(CDC_CONFIG, config);
+}
+
+/**
+ * @brief The electrode charge time can be configured to equal a range of values between 500 ns and 32 μS. 
+ * This value is set in the Charge Discharge Time (CDT) in the Filter Configuration Register.
+ *
+ * @param value 
+ */
+void MPR121::setElectrodeChargeTime(uint8_t value)
+{
+    writeRegister(CDT_CONFIG, 0x20); // REG 0x5D default 0x24
 }
 
 void MPR121::poll() {
@@ -177,13 +247,16 @@ bool MPR121::padIsTouched()
     }
 }
 
+/**
+ * @brief returns true if the given pad is being touched
+ * 
+ * @param pad 
+ * @return true 
+ * @return false 
+ */
 bool MPR121::padIsTouched(uint8_t pad)
 {
-    if (bitwise_read_bit(this->getCurrTouched(), pad)) {
-        return true;
-    } else {
-        return false;
-    }
+    return (bool)bitwise_read_bit(this->getCurrTouched(), pad);
 }
 
 struct MPR121::TouchedNode *MPR121::createNode(uint8_t pad)

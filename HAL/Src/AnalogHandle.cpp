@@ -1,3 +1,13 @@
+/**
+In the STM32 microcontrollers with the ADC oversampling feature, the ADC hardware
+oversampling feature can be used for averaging. This feature simply performs the sum of a
+given number of ADC raw samples into one final sample. This final sample can then be right
+shifted to reduce the bit width caused by multiple ADC samples accumulation. All these
+operations (accumulation and right-bit shifting) are performed by hardware. The ADC
+hardware oversampling feature can be configured to process up to 1024 input samples
+(depending on devices).
+*/
+
 #include "AnalogHandle.h"
 
 ADC_HandleTypeDef hadc1;
