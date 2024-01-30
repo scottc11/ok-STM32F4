@@ -70,6 +70,7 @@ public:
     void stop();
     void reset();
     void setStepsPerBar(int steps);
+    uint8_t getStepsPerBar();
     void handleStep();
 
     void setPulseFrequency(uint32_t ticks);

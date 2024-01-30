@@ -49,6 +49,10 @@ void Metronome::setStepsPerBar(int steps)
     stepsPerBar = steps;
 }
 
+uint8_t Metronome::getStepsPerBar() {
+    return stepsPerBar;
+}
+
 void Metronome::handleStep()
 {
     if (step < stepsPerBar - 1)
