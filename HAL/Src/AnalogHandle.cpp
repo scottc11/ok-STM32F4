@@ -8,18 +8,18 @@ hardware oversampling feature can be configured to process up to 1024 input samp
 (depending on devices).
 */
 
-#include "AnalogHandle.h"
+#include "AnalogIn.h"
 
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim3;
 
-SemaphoreHandle_t AnalogHandle::semaphore;
-AnalogHandle *AnalogHandle::ADC_INSTANCES[ADC_DMA_BUFF_SIZE] = {0};
-uint16_t AnalogHandle::DMA_BUFFER[ADC_DMA_BUFF_SIZE] = {0};
-int AnalogHandle::num_adc_instances = 0;
+SemaphoreHandle_t AnalogIn::semaphore;
+AnalogIn *AnalogIn::ADC_INSTANCES[ADC_DMA_BUFF_SIZE] = {0};
+uint16_t AnalogIn::DMA_BUFFER[ADC_DMA_BUFF_SIZE] = {0};
+int AnalogIn::num_adc_instances = 0;
 
-AnalogHandle::AnalogHandle(PinName _pin)
+AnalogIn::AnalogIn(PinName _pin)
 {
     pin = _pin;
     num_adc_instances++;
@@ -35,17 +35,17 @@ AnalogHandle::AnalogHandle(PinName _pin)
     }
 }
 
-uint16_t AnalogHandle::read_u16()
+uint16_t AnalogIn::read_u16()
 {
     return invert ? BIT_MAX_16 - currValue : currValue;
 }
 
-void AnalogHandle::invertReadings()
+void AnalogIn::invertReadings()
 {
     this->invert = !this->invert;
 }
 
-void AnalogHandle::setFilter(float value)
+void AnalogIn::setFilter(float value)
 {
     if (value == 0)
     {
@@ -70,7 +70,7 @@ void AnalogHandle::setFilter(float value)
  *
  * @return okSemaphore*
  */
-okSemaphore *AnalogHandle::initDenoising()
+okSemaphore *AnalogIn::initDenoising()
 {
     this->samplingNoise = true;
     denoisingSemaphore.take(); // create a semaphore
@@ -78,7 +78,7 @@ okSemaphore *AnalogHandle::initDenoising()
 }
 
 // set this as a task so that in the main loop you block with a semaphore until this task gives the semaphore back (once it has completed)
-void AnalogHandle::sampleSignalNoise(uint16_t sample)
+void AnalogIn::sampleSignalNoise(uint16_t sample)
 {
     // get max read, get min read, get avg read
     if (sampleCounter < ADC_SAMPLE_COUNTER_LIMIT)
@@ -116,7 +116,7 @@ void AnalogHandle::sampleSignalNoise(uint16_t sample)
  *
  * @param sample
  */
-void AnalogHandle::sampleReadyCallback(uint16_t sample)
+void AnalogIn::sampleReadyCallback(uint16_t sample)
 {
     prevValue = currValue;
     currValue = convert12to16(sample);
@@ -151,37 +151,37 @@ void AnalogHandle::sampleReadyCallback(uint16_t sample)
  * @brief A static member function which gets called as an ISR whenever the ADC DMA Conversion is completed
  *
  */
-void AnalogHandle::RouteConversionCompleteCallback() // static
+void AnalogIn::RouteConversionCompleteCallback() // static
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(AnalogHandle::semaphore, &xHigherPriorityTaskWoken);
+    xSemaphoreGiveFromISR(AnalogIn::semaphore, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 /**
  * @brief This task waits for a semaphore to be made available by the RouteConversionCompleteCallback()
- * When it takes the semaphore, the task will trigger a callback function for every AnalogHandle
+ * When it takes the semaphore, the task will trigger a callback function for every AnalogIn
  * instance that exists.
  *
  * @param params
  */
-void AnalogHandle::sampleReadyTask(void *params)
+void AnalogIn::sampleReadyTask(void *params)
 {
     logger_log_task_watermark();
     while (1)
     {
-        xSemaphoreTake(AnalogHandle::semaphore, portMAX_DELAY);
+        xSemaphoreTake(AnalogIn::semaphore, portMAX_DELAY);
         for (auto ins : ADC_INSTANCES)
         {
             if (ins) // if instance not NULL
             {
-                ins->sampleReadyCallback(AnalogHandle::DMA_BUFFER[ins->index]);
+                ins->sampleReadyCallback(AnalogIn::DMA_BUFFER[ins->index]);
             }
         }
     }
 }
 
-void AnalogHandle::log_noise_threshold_to_console(char const *source_id)
+void AnalogIn::log_noise_threshold_to_console(char const *source_id)
 {
     logger_log("\n");
     logger_log(source_id);
@@ -191,7 +191,7 @@ void AnalogHandle::log_noise_threshold_to_console(char const *source_id)
     logger_log(this->avgValueWhenIdle);
 }
 
-void AnalogHandle::log_min_max(char const *source_id)
+void AnalogIn::log_min_max(char const *source_id)
 {
     logger_log(source_id);
     logger_log(" Signal Max: ");
@@ -204,18 +204,18 @@ void AnalogHandle::log_min_max(char const *source_id)
 /**
  * @brief resets the min and max input values to the currently read value on the ADC Pin
  */
-void AnalogHandle::resetMinMax()
+void AnalogIn::resetMinMax()
 {
     this->setInputMax(currValue + 1);
     this->setInputMin(currValue - 1);
 }
 
-void AnalogHandle::setInputMax(uint16_t value)
+void AnalogIn::setInputMax(uint16_t value)
 {
     this->inputMax = value;
 }
 
-void AnalogHandle::setInputMin(uint16_t value)
+void AnalogIn::setInputMin(uint16_t value)
 {
     this->inputMin = value;
 }
@@ -226,7 +226,7 @@ void AnalogHandle::setInputMin(uint16_t value)
  * @param numSamples how many samples ie. how long to sample for.
  * @return okSemaphore*
  */
-okSemaphore *AnalogHandle::beginMinMaxSampling(uint16_t numSamples)
+okSemaphore *AnalogIn::beginMinMaxSampling(uint16_t numSamples)
 {
     this->resetMinMax();
     this->sampleCounter = 0;
@@ -239,7 +239,7 @@ okSemaphore *AnalogHandle::beginMinMaxSampling(uint16_t numSamples)
 /**
  * @brief determine a signals min and max values
  */
-void AnalogHandle::sampleMinMax(uint16_t sample)
+void AnalogIn::sampleMinMax(uint16_t sample)
 {
     if (sample > inputMax)
     {
@@ -251,12 +251,12 @@ void AnalogHandle::sampleMinMax(uint16_t sample)
     }
 }
 
-void AnalogHandle::attachSamplingProgressCallback(Callback<void(uint16_t progress)> func)
+void AnalogIn::attachSamplingProgressCallback(Callback<void(uint16_t progress)> func)
 {
     samplingProgressCallback = func;
 }
 
-void AnalogHandle::detachSamplingProgressCallback()
+void AnalogIn::detachSamplingProgressCallback()
 {
     samplingProgressCallback = NULL;
 }
@@ -265,7 +265,7 @@ void AnalogHandle::detachSamplingProgressCallback()
  * @brief Static member function which must be called in main() in order for ADC to work
  * Initializes ADC, DMA, and TIM peripherals
  */
-void AnalogHandle::initialize()
+void AnalogIn::initialize()
 {
     // initialize DMA
     __HAL_RCC_DMA2_CLK_ENABLE(); /* DMA controller clock enable */
@@ -359,19 +359,19 @@ void AnalogHandle::initialize()
     setSampleRate(ADC_SAMPLE_RATE_HZ);
 
     // create semaphore
-    AnalogHandle::semaphore = xSemaphoreCreateBinary();
+    AnalogIn::semaphore = xSemaphoreCreateBinary();
 
     // create sample ready task
-    xTaskCreate(AnalogHandle::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
+    xTaskCreate(AnalogIn::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
 
     // start timer
     HAL_TIM_Base_Start(&htim3);
     
     // start ADC in DMA mode
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogHandle::DMA_BUFFER, ADC_DMA_BUFF_SIZE);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogIn::DMA_BUFFER, ADC_DMA_BUFF_SIZE);
 }
 
-void AnalogHandle::setSampleRate(uint32_t sample_rate_hz)
+void AnalogIn::setSampleRate(uint32_t sample_rate_hz)
 {
     switch (hadc1.Init.ClockPrescaler)
     {
@@ -413,6 +413,6 @@ extern "C" void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
     if (hadc->Instance == ADC1)
     {
-        AnalogHandle::RouteConversionCompleteCallback();
+        AnalogIn::RouteConversionCompleteCallback();
     }
 }

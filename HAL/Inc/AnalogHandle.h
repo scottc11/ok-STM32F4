@@ -34,10 +34,10 @@
 /**
  * @brief Simple class that pulls the data from a DMA buffer into an object
  */
-class AnalogHandle
+class AnalogIn
 {
 public:
-    AnalogHandle(PinName _pin);
+    AnalogIn(PinName _pin);
 
     int index;         // represents position of sample data in DMA buffer array
     PinName pin;
@@ -84,7 +84,7 @@ public:
     static void RouteConversionCompleteCallback();
 
     static uint16_t DMA_BUFFER[ADC_DMA_BUFF_SIZE];
-    static AnalogHandle *ADC_INSTANCES[ADC_DMA_BUFF_SIZE];
+    static AnalogIn *ADC_INSTANCES[ADC_DMA_BUFF_SIZE];
     static int num_adc_instances;
     static SemaphoreHandle_t semaphore;
 
