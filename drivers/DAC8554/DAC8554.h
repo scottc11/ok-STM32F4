@@ -34,8 +34,9 @@ public:
 
   /**
    * NOTE: Texas Instruments requires special SPI formatting, most commonly known as SPI Mode #1
+   * NOTE: Certain STM32 SPI periferals have limited bus speeds
   */
-  DAC8554(PinName spiMosi, PinName spiSck, PinName selectPin) : spi(spiMosi, NC, spiSck, 1, selectPin)
+  DAC8554(SPI_TypeDef *spi_instance, PinName spiMosi, PinName spiSck, PinName selectPin) : spi(spi_instance, spiMosi, NC, spiSck, 1, selectPin)
   {
     // spi.frequency(25000000); // 25MHz
   }

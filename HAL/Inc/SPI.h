@@ -6,8 +6,9 @@
 
 class SPI {
 public:
-    SPI(PinName mosi, PinName miso, PinName sclk, int mode, PinName ssel = NC) : _slaveSelect(ssel, 1)
+    SPI(SPI_TypeDef *_instance, PinName mosi, PinName miso, PinName sclk, int mode, PinName ssel = NC) : _slaveSelect(ssel, 1)
     {
+        instance = _instance;
         _mosi = mosi;
         _miso = miso;
         _sclk = sclk;
@@ -33,5 +34,6 @@ private:
     DigitalOut _slaveSelect;
 
     SPI_HandleTypeDef _hspi;
+    SPI_TypeDef *instance;
     static Mutex _mutex;
 };

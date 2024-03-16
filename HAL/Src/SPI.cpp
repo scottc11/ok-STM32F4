@@ -5,8 +5,17 @@ Mutex SPI::_mutex;
 void SPI::init()
 {
     _mutex.lock();
+    
     /* Peripheral clock enable */
-    __HAL_RCC_SPI2_CLK_ENABLE();
+    if (this->instance == SPI1) {
+        __HAL_RCC_SPI1_CLK_ENABLE();    
+    }
+    else if (this->instance == SPI2) {
+        __HAL_RCC_SPI2_CLK_ENABLE();
+    }
+    else {
+        __HAL_RCC_SPI3_CLK_ENABLE();
+    }
 
     /** SPI2 GPIO Configuration */
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -16,7 +25,15 @@ void SPI::init()
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+    
+    // handle alternate pin func per instance
+    if (this->instance == SPI1) {
+        GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+    } else if (this->instance == SPI2) {
+        GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+    } else {
+        GPIO_InitStruct.Alternate = GPIO_AF5_SPI3;
+    }
     HAL_GPIO_Init(gpio_get_port(_mosi), &GPIO_InitStruct);
 
     gpio_enable_clock(_sclk);
@@ -24,7 +41,6 @@ void SPI::init()
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
     HAL_GPIO_Init(gpio_get_port(_sclk), &GPIO_InitStruct);
 
     /* SPI2 parameter configuration*/
@@ -38,13 +54,21 @@ void SPI::init()
     _hspi.Init.TIMode = SPI_TIMODE_DISABLE;
     _hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     _hspi.Init.CRCPolynomial = 10;
+    
     this->mode(_mode);
+    
     HAL_StatusTypeDef status;
     status = HAL_SPI_Init(&_hspi);
     error_handler(status);
     _mutex.unlock();
 }
 
+/**
+ * @brief master and slaves must agree on the clock polarity and phase with respect to the data exchanged over MOSI and MISO lines
+ * The combinations of polarity and phase are often referred to as SPI bus modes
+ * The most common modes are mode 0 and mode 3, but the majority of slave devices support at least a couple of bus modes.
+ * @param mode
+ */
 void SPI::mode(int mode)
 {
     switch (mode)
