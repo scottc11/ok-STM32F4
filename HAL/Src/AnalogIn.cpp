@@ -262,9 +262,9 @@ void AnalogIn::detachSamplingProgressCallback()
 }
 
 /**
- * @brief Static member function which must be called in main() in order for ADC to work
- * Initializes ADC, DMA, and TIM peripherals
- */
+ * @brief Initializes ADC peripheral and creates a FreeRTOS task for handling incoming DMA ADC reads
+ * @note Must be called in main() in order for ADC to work.
+*/
 void AnalogIn::initialize()
 {
     // initialize DMA
