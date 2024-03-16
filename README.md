@@ -1,19 +1,3 @@
-
-# GCC Reference:
-
-The `__attribute((unused))` is a gcc attribute to indicate to the compiler that the argument args is unused, and it prevents warnings about it.
-
-### Preventing compiler optimazation for debugging
-Use this `__attribute__((optimize("O0")))` to disable optimizations for a function.
-ex.
-```
-void __attribute__((optimize("O0"))) myFunc()
-{
-    // this will not be optimized
-}
-```
-
-
 # Toolchain setup
 
 #### Install Homebrew package manager (for MAC)
@@ -34,6 +18,12 @@ brew update
 brew install gcc-arm-none-eabi
 arm-none-eabi-gcc --version
 ```
+
+#### [Install VSCode](https://code.visualstudio.com/)
+
+#### VSCode Extensions
+- [C/C++](https://github.com/Microsoft/vscode-cpptools) C/C++ for Visual Studio Code
+- [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug) ARM Cortex-M GDB Debugger support for VSCode
 
 # Project Setup
 Create a new folder for you project and structure it like this:
@@ -98,7 +88,7 @@ First, `cd` into the submodule directory and checkout a new branch with `git che
 
 You can now commit changes and push to the remote
 
-## Bootloader
+## USB Bootloader
 No external pull-up resistor is required
 
 Bootloader ID: 0x90
@@ -134,3 +124,18 @@ Note: Make sure you have the `IntelHex` python module installed.
 ### Using a `.bin` file (tested and working)
 
 `dfu-util -a 0 -s 0x08000000:leave -D ./path/to/file.bin`
+
+
+## GCC Reference:
+
+The `__attribute((unused))` is a gcc attribute to indicate to the compiler that the argument args is unused, and it prevents warnings about it.
+
+### Preventing compiler optimazation for debugging
+Use this `__attribute__((optimize("O0")))` to disable optimizations for a function.
+ex.
+```
+void __attribute__((optimize("O0"))) myFunc()
+{
+    // this will not be optimized
+}
+```
