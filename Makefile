@@ -47,12 +47,14 @@ $(LIB_PATH)/system/Src/system_clock_config.c
 
 
 CPP_SOURCES += $(shell find $(LIB_PATH)/HAL -name '*.cpp')
+CPP_SOURCES += $(shell find $(LIB_PATH)/RTOS -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/misc -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/utils -name '*.cpp')
 
+
 C_INCLUDES += \
 -I$(LIB_PATH)/HAL/Inc \
--I$(LIB_PATH)/HAL/rtos/Inc \
+-I$(LIB_PATH)/RTOS/Inc \
 -I$(LIB_PATH)/cxxsupport \
 -I$(LIB_PATH)/STM32F4xx_HAL_Driver/Inc \
 -I$(LIB_PATH)/STM32F4xx_HAL_Driver/Inc/Legacy \
