@@ -1,6 +1,16 @@
 #include "CD4051.h"
 
 /**
+ * @brief activate/deactivate mux
+ *
+ * @param state true will deactivate mux
+ */
+void CD4051::inhibit(bool state)
+{
+    inhibitPin.write(state);
+}
+
+/**
  * @brief activate a channel between 0 and 7
  * 
  * @param channel number 0 to 7
@@ -10,7 +20,7 @@ void CD4051::activateChannel(int channel) {
     if (channel > 7) {
         return;
     }
-
+    activeChannel = channel;
     switch (channel) {
         case 0:
             pinA.write(0);
