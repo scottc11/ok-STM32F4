@@ -37,7 +37,7 @@ public:
     void reset(TickType_t delay = 0);
     
     TickType_t getPeriod();
-    void setPeriod(TickType_t period);
+    void setPeriod(TickType_t period, bool useMilliseconds=false);
 
     void attachCallback(Callback<void()> func, TickType_t period, bool repeated);
     void detachCallback();

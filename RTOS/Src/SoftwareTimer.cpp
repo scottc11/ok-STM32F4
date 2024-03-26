@@ -51,13 +51,16 @@ TickType_t SoftwareTimer::getPeriod()
 /**
  * @brief change the period of an active or dormant state timer. Changing the period of a dormant timers will also start the timer.
  *
- * @param period
+ * @param period The new period for timer instance. Timer periods are specified in tick periods or millisecond periods based on value of useMilliseconds param
+ * @param useMilliseconds if true, period represents milliseconds, else period equals number of ticks
  *
- * @note Timer periods are specified in tick periods, so the constant portTICK_PERIOD_MS can be used to convert a time that has been specified in milliseconds.
- * For example, if the timer must expire after 100 ticks, then xNewPeriod should be set to 100. Alternatively, if the timer must expire after 500ms, then xNewPeriod can be set to ( 500 / portTICK_PERIOD_MS ) provided configTICK_RATE_HZ is less than or equal to 1000.
+ * @note the frequency of 1 'tick' is based on the value of FreeRTOS configTICK_RATE_HZ, which is usually set to 1000Hz
  */
-void SoftwareTimer::setPeriod(TickType_t period)
+void SoftwareTimer::setPeriod(TickType_t period, bool useMilliseconds /*false*/)
 {
+    if (useMilliseconds) {
+        period = (period / portTICK_PERIOD_MS);
+    }
     xTimerChangePeriod(handle, period, 100);
 }
 
