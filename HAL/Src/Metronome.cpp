@@ -354,23 +354,6 @@ extern "C" void TIM4_IRQHandler(void)
     HAL_TIM_IRQHandler(&htim4);
 }
 
-/**
- * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM5 interrupt took place, inside
- * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
- * a global variable "uwTick" used as application time base.
- * @note   Function addionally calls Metronome static function for instance specific code
- * @param  htim : TIM handle
- * @retval None
- */
-extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    Metronome::RouteOverflowCallback(htim);
-    if (htim->Instance == TIM5)
-    {
-        HAL_IncTick();
-    }
-}
 
 /**
  * @brief Input Capture Callback for all TIMx configured in Input Capture mode
