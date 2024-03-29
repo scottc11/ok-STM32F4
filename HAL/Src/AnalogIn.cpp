@@ -392,7 +392,7 @@ void AnalogIn::setSampleRate(uint32_t sample_rate_hz)
         tim_set_overflow_freq(&htim3, sample_rate_hz * 8);
         break;
     default:
-        tim_set_overflow_freq(&htim3, sample_rate_hz * 2);
+        tim_set_overflow_freq(&htim3, sample_rate_hz);
         break;
     }
 }
