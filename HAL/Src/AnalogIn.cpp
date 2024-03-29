@@ -265,7 +265,7 @@ void AnalogIn::detachSamplingProgressCallback()
  * @brief Initializes ADC peripheral and creates a FreeRTOS task for handling incoming DMA ADC reads
  * @note Must be called in main() in order for ADC to work.
 */
-void AnalogIn::initialize()
+void AnalogIn::initialize(uint16_t sample_rate)
 {
     // initialize DMA
     __HAL_RCC_DMA2_CLK_ENABLE(); /* DMA controller clock enable */
@@ -356,7 +356,7 @@ void AnalogIn::initialize()
     HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
 
     // set sample rate
-    setSampleRate(ADC_SAMPLE_RATE_HZ);
+    setSampleRate(sample_rate);
 
     // create semaphore
     AnalogIn::semaphore = xSemaphoreCreateBinary();
