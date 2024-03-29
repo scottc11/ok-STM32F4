@@ -31,12 +31,12 @@ public:
     void stop();
     // void reset();
     void setOverflowFrequency(uint32_t freq_hz);
+    void handleOverflowCallback();
 
     void attachOverflowCallback(Callback<void()> callback);
-    void dettachOverflowCallback();
-    void handleOverflowInterrupt();
+    void detachOverflowCallback();
 
     static HardwareTimer *TIM_INSTANCES[TIM_MAX_NUM_INSTANCES];
-    static void RoutePeriodElapsedCallback(TIM_HandleTypeDef *htim);
+    static void RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim);
     static void RouteTimerGlobalInterrupt(TIM_TypeDef *instance);
 };

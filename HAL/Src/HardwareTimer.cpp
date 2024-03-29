@@ -60,11 +60,11 @@ void HardwareTimer::attachOverflowCallback(Callback<void()> callback) {
     overflowCallback = callback;
 }
 
-void HardwareTimer::dettachOverflowCallback() {
+void HardwareTimer::detachOverflowCallback() {
     overflowCallback = NULL;
 }
 
-void HardwareTimer::handleOverflowInterrupt() {
+void HardwareTimer::handleOverflowCallback() {
     if (overflowCallback)
     {
         overflowCallback();
@@ -78,14 +78,11 @@ void HardwareTimer::handleOverflowInterrupt() {
  */
 void HardwareTimer::RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim)
 {
-    // if (this->htim->Instance == _htim->Instance) {
-    //     this->handleOverflowInterrupt();
-    // }
     for (auto ins : TIM_INSTANCES)
     {
         if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
         {
-            ins->handleOverflowInterrupt();
+            ins->handleOverflowCallback();
         }
     }
 }
