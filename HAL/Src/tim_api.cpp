@@ -4,8 +4,8 @@
  * @brief Get the APB Timer Clock Frequency
  * @note this all depends on the MCU clock configuration setup.
  *
- * APB1 : Timer 2, 3, 4, 5, 6, 7, 12, 13, 14
- * APB2 : Timer 1, 8, 9, 10, 11
+ * APB1 @ 90MHz: Timer 2, 3, 4, 5, 6, 7, 12, 13, 14
+ * APB2 @ 180MHz: Timer 1, 8, 9, 10, 11
  *
  * @param htim
  * @return uint32_t
