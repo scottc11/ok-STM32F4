@@ -153,9 +153,13 @@ void AnalogIn::sampleReadyCallback(uint16_t sample)
  */
 void AnalogIn::RouteConversionCompleteCallback() // static
 {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(AnalogIn::semaphore, &xHigherPriorityTaskWoken);
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    for (auto ins : ADC_INSTANCES)
+    {
+        if (ins) // if instance not NULL
+        {
+            ins->sampleReadyCallback(AnalogIn::DMA_BUFFER[ins->index]);
+        }
+    }
 }
 
 /**
@@ -359,10 +363,10 @@ void AnalogIn::initialize(uint16_t sample_rate)
     setSampleRate(sample_rate);
 
     // create semaphore
-    AnalogIn::semaphore = xSemaphoreCreateBinary();
+    // AnalogIn::semaphore = xSemaphoreCreateBinary();
 
     // create sample ready task
-    xTaskCreate(AnalogIn::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
+    // xTaskCreate(AnalogIn::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
 
     // start timer
     HAL_TIM_Base_Start(&htim3);
