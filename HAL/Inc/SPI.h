@@ -16,7 +16,7 @@ public:
         _ssel = ssel;
     }
 
-    void init();
+    void init(uint32_t prescaler = SPI_BAUDRATEPRESCALER_32);
 
     void write(uint8_t *data, int length);
 

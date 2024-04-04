@@ -2,7 +2,15 @@
 
 Mutex SPI::_mutex;
 
-void SPI::init()
+/**
+ * @brief Intialize SPI perihperal based on selected instance
+ * @param prescaler baudrate prescaler for setting transmission speed
+ * 
+ * @note Tansmission speed based on APB clocks:
+ * APB1 @ 45MHz: SPI2, SPI3
+ * APB2 @ 90MHz: SPI1
+ */
+void SPI::init(uint32_t prescaler/*=SPI_BAUDRATEPRESCALER_32*/)
 {
     _mutex.lock();
     
@@ -44,12 +52,12 @@ void SPI::init()
     HAL_GPIO_Init(gpio_get_port(_sclk), &GPIO_InitStruct);
 
     /* SPI2 parameter configuration*/
-    _hspi.Instance = SPI2;
+    _hspi.Instance = this->instance;
     _hspi.Init.Mode = SPI_MODE_MASTER;
     _hspi.Init.Direction = SPI_DIRECTION_2LINES;
     _hspi.Init.DataSize = SPI_DATASIZE_8BIT;
     _hspi.Init.NSS = SPI_NSS_SOFT;
-    _hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+    _hspi.Init.BaudRatePrescaler = prescaler; // defaults to SPI_BAUDRATEPRESCALER_32
     _hspi.Init.FirstBit = SPI_FIRSTBIT_MSB;
     _hspi.Init.TIMode = SPI_TIMODE_DISABLE;
     _hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -96,11 +104,15 @@ void SPI::write(uint8_t *data, int length)
 {
     _mutex.lock();
     HAL_StatusTypeDef status;
-    _slaveSelect.write(0);
+
+    if (_slaveSelect._pin) _slaveSelect.write(0);
+
     status = HAL_SPI_Transmit(&_hspi, (uint8_t *)data, length, HAL_MAX_DELAY);
     if (status != HAL_OK) {
         error_handler(status);
     }
-    _slaveSelect.write(1);
+    
+    if (_slaveSelect._pin) _slaveSelect.write(1);
+
     _mutex.unlock();
 }
