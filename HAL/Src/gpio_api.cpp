@@ -46,6 +46,62 @@ GPIO_TypeDef * gpio_get_port(PinName pin) {
     }
 }
 
+int gpio_get_spi_alt_mosi(PinName pin)
+{
+    int index = 0;
+    while (PinMap_SPI_MOSI[index].pin != NC)
+    {
+        if (pin == PinMap_SPI_MOSI[index].pin)
+        {
+            return PinMap_SPI_MOSI[index].function;
+        }
+        index++;
+    }
+    return 0;
+}
+
+int gpio_get_spi_alt_miso(PinName pin)
+{
+    int index = 0;
+    while (PinMap_SPI_MISO[index].pin != NC)
+    {
+        if (pin == PinMap_SPI_MISO[index].pin)
+        {
+            return PinMap_SPI_MISO[index].function;
+        }
+        index++;
+    }
+    return 0;
+}
+
+int gpio_get_spi_alt_sclk(PinName pin)
+{
+    int index = 0;
+    while (PinMap_SPI_SCLK[index].pin != NC)
+    {
+        if (pin == PinMap_SPI_SCLK[index].pin)
+        {
+            return PinMap_SPI_SCLK[index].function;
+        }
+        index++;
+    }
+    return 0;
+}
+
+int gpio_get_spi_alt_ssel(PinName pin)
+{
+    int index = 0;
+    while (PinMap_SPI_SSEL[index].pin != NC)
+    {
+        if (pin == PinMap_SPI_SSEL[index].pin)
+        {
+            return PinMap_SPI_SSEL[index].function;
+        }
+        index++;
+    }
+    return 0;
+}
+
 void enable_adc_pin(PinName pin)
 {
     __HAL_RCC_ADC1_CLK_ENABLE(); /* Peripheral clock enable */

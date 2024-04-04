@@ -8,12 +8,18 @@
 GPIO_TypeDef *gpio_enable_clock(PinName pin);
 uint32_t gpio_get_pin(PinName pin);
 GPIO_TypeDef *gpio_get_port(PinName);
+
+int gpio_get_spi_alt_mosi(PinName pin);
+int gpio_get_spi_alt_miso(PinName pin);
+int gpio_get_spi_alt_sclk(PinName pin);
+int gpio_get_spi_alt_ssel(PinName pin);
+
 void enable_adc_pin(PinName pin);
 
 void set_pin_pull(GPIO_InitTypeDef *config, PinMode mode);
 
 void gpio_set_pin_speed(PinName pin, GPIO_Speed speed);
-void gpio_config_input_capture(PinName pin);
+void gpio_config_input_capture(PinName pin, uint32_t alt_func_id);
 GPIO_PinState gpio_read_pin(PinName pin);
 void gpio_irq_set(PinName pin, IrqEvent event, bool enable);
 IRQn_Type gpio_get_irq_line(PinName pin);

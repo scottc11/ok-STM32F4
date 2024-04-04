@@ -5,12 +5,13 @@ Mutex SPI::_mutex;
 /**
  * @brief Intialize SPI perihperal based on selected instance
  * @param prescaler baudrate prescaler for setting transmission speed
- * 
+ * @param birOrder SPI_FIRSTBIT_MSB || SPI_FIRSTBIT_LSB
+ *
  * @note Tansmission speed based on APB clocks:
  * APB1 @ 45MHz: SPI2, SPI3
  * APB2 @ 90MHz: SPI1
  */
-void SPI::init(uint32_t prescaler/*=SPI_BAUDRATEPRESCALER_32*/)
+void SPI::init(uint32_t prescaler /*=SPI_BAUDRATEPRESCALER_32*/, uint8_t bitOrder /*=SPI_FIRSTBIT_MSB*/)
 {
     _mutex.lock();
     
@@ -28,27 +29,32 @@ void SPI::init(uint32_t prescaler/*=SPI_BAUDRATEPRESCALER_32*/)
     /** SPI2 GPIO Configuration */
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    gpio_enable_clock(_mosi);
-    GPIO_InitStruct.Pin = gpio_get_pin(_mosi);
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    
-    // handle alternate pin func per instance
-    if (this->instance == SPI1) {
-        GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
-    } else if (this->instance == SPI2) {
-        GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-    } else {
-        GPIO_InitStruct.Alternate = GPIO_AF5_SPI3;
+    if (_mosi != NC) {
+        gpio_enable_clock(_mosi);
+        GPIO_InitStruct.Pin = gpio_get_pin(_mosi);
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStruct.Alternate = gpio_get_spi_alt_mosi(_mosi);
+        HAL_GPIO_Init(gpio_get_port(_mosi), &GPIO_InitStruct);
     }
-    HAL_GPIO_Init(gpio_get_port(_mosi), &GPIO_InitStruct);
+
+    if (_miso != NC) {
+        gpio_enable_clock(_miso);
+        GPIO_InitStruct.Pin = gpio_get_pin(_miso);
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStruct.Alternate = gpio_get_spi_alt_miso(_miso);
+        HAL_GPIO_Init(gpio_get_port(_miso), &GPIO_InitStruct);
+    }
 
     gpio_enable_clock(_sclk);
     GPIO_InitStruct.Pin = gpio_get_pin(_sclk);
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = gpio_get_spi_alt_sclk(_sclk);
     HAL_GPIO_Init(gpio_get_port(_sclk), &GPIO_InitStruct);
 
     /* SPI2 parameter configuration*/
