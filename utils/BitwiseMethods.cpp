@@ -68,6 +68,18 @@ int bitwise_flip_bit(int byte, int bit) {
 }
 
 /**
+ * @brief Check if a byte has more then one of its bits set
+ * 
+ * @param byte 
+ * @return true 
+ * @return false 
+ */
+bool bitwise_multiple_bits_set(int byte) {
+  return (byte & (byte - 1)) != 0;
+}
+
+
+/**
  * @brief merge two 8-bit values into a single 16-bit value
  * @param byte1 bits 7..0
  * @param byte2 bits 15..8

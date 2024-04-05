@@ -10,6 +10,7 @@ int bitwise_clear_many(int byte, int value);
 int bitwise_write_bit(int byte, int bit, bool state);
 int bitwise_read_bit(int byte, int bit);
 int bitwise_flip_bit(int byte, int bit);
+bool bitwise_multiple_bits_set(int byte);
 
 uint16_t two8sTo16(int byte1, int byte2);
 uint32_t two16sTo32(uint16_t byte1, uint16_t byte2);
