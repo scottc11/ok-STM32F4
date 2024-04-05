@@ -4,7 +4,7 @@ Mutex SPI::_mutex;
 
 /**
  * @brief Intialize SPI perihperal based on selected instance
- * @param prescaler baudrate prescaler for setting transmission speed
+ * @param prescaler baudrate prescaler for setting transmission speed (ex. SPI_BAUDRATEPRESCALER_32)
  * @param birOrder SPI_FIRSTBIT_MSB || SPI_FIRSTBIT_LSB
  *
  * @note Tansmission speed based on APB clocks:
@@ -64,7 +64,7 @@ void SPI::init(uint32_t prescaler /*=SPI_BAUDRATEPRESCALER_32*/, uint8_t bitOrde
     _hspi.Init.DataSize = SPI_DATASIZE_8BIT;
     _hspi.Init.NSS = SPI_NSS_SOFT;
     _hspi.Init.BaudRatePrescaler = prescaler; // defaults to SPI_BAUDRATEPRESCALER_32
-    _hspi.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    _hspi.Init.FirstBit = bitOrder;
     _hspi.Init.TIMode = SPI_TIMODE_DISABLE;
     _hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     _hspi.Init.CRCPolynomial = 10;
@@ -120,5 +120,12 @@ void SPI::write(uint8_t *data, int length)
     
     if (_slaveSelect._pin) _slaveSelect.write(1);
 
+    _mutex.unlock();
+}
+
+void SPI::readWrite(uint8_t *data_in, uint8_t *data_out, int length)
+{
+    _mutex.lock();
+    HAL_SPI_TransmitReceive(&_hspi, (uint8_t *)data_out, (uint8_t *)data_in, length, HAL_MAX_DELAY);
     _mutex.unlock();
 }
