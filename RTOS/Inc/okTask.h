@@ -11,7 +11,7 @@
 #pragma once
 
 #include "cmsis_os.h"
-#include "logger.h"
+#include "uart_logger.h"
 
 class okTask
 {

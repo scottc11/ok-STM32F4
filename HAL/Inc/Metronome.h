@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "logger.h"
+#include "uart_logger.h"
 #include "tim_api.h"
 #include "Callback.h"
 #include "Algorithms.h"
