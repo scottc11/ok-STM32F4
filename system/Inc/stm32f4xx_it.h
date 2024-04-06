@@ -55,6 +55,11 @@ void UsageFault_Handler(void);
 void DebugMon_Handler(void);
 
 /**
+ * USB 
+*/
+void OTG_FS_IRQHandler(void);
+
+/**
  * TIMx Interupt Handlers
 */
 void TIM5_IRQHandler(void);
