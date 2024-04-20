@@ -162,29 +162,6 @@ void AnalogIn::RouteConversionCompleteCallback() // static
     }
 }
 
-/**
- * @brief This task waits for a semaphore to be made available by the RouteConversionCompleteCallback()
- * When it takes the semaphore, the task will trigger a callback function for every AnalogIn
- * instance that exists.
- *
- * @param params
- */
-void AnalogIn::sampleReadyTask(void *params)
-{
-    logger_log_task_watermark();
-    while (1)
-    {
-        xSemaphoreTake(AnalogIn::semaphore, portMAX_DELAY);
-        for (auto ins : ADC_INSTANCES)
-        {
-            if (ins) // if instance not NULL
-            {
-                ins->sampleReadyCallback(AnalogIn::DMA_BUFFER[ins->index]);
-            }
-        }
-    }
-}
-
 void AnalogIn::log_noise_threshold_to_console(char const *source_id)
 {
     logger_log("\n");
@@ -361,12 +338,6 @@ void AnalogIn::initialize(uint16_t sample_rate)
 
     // set sample rate
     setSampleRate(sample_rate);
-
-    // create semaphore
-    // AnalogIn::semaphore = xSemaphoreCreateBinary();
-
-    // create sample ready task
-    // xTaskCreate(AnalogIn::sampleReadyTask, "ADC Task", RTOS_STACK_SIZE_MIN, NULL, RTOS_PRIORITY_MED, NULL);
 
     // start timer
     HAL_TIM_Base_Start(&htim3);

@@ -80,7 +80,6 @@ public:
 
     static void initialize(uint16_t sample_rate);
     static void setSampleRate(uint32_t sample_rate_hz);
-    static void sampleReadyTask(void *params);
     static void RouteConversionCompleteCallback();
 
     static uint16_t DMA_BUFFER[ADC_DMA_BUFF_SIZE];
