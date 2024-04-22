@@ -16,3 +16,4 @@ void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t target_freq);
 void tim_enable(TIM_TypeDef *instance);
 
 void OK_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void OK_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim);

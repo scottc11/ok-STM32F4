@@ -125,6 +125,18 @@ __weak void OK_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 /**
+ * @brief Input Capture Callback for all TIMx configured in Input Capture mode
+ * @note This function should not be modified, when the callback is needed, OK_TIM_IC_CaptureCallback should be implemented in the user file
+ * @param htim
+ * @return __weak
+ */
+__weak void OK_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(htim);
+}
+
+/**
  * @brief  Period elapsed callback in non blocking mode (when a TIM overflow interrupt gets triggered)
  * @note   Function addionally calls Metronome static function for instance specific code
  * @param  htim : TIM handle
@@ -142,6 +154,15 @@ extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 /**
+ * @brief Input Capture Callback for all TIMx configured in Input Capture mode
+ */
+extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    Metronome::RouteCaptureCallback(htim);
+    OK_TIM_IC_CaptureCallback(htim);
+}
+
+/**
  * @brief This function handles TIM6 global interrupt.
  */
 extern "C" void TIM6_DAC_IRQHandler(void) {
@@ -151,10 +172,6 @@ extern "C" void TIM6_DAC_IRQHandler(void) {
 
 extern "C" void TIM7_IRQHandler(void) {
     HardwareTimer::RouteTimerGlobalInterrupt(TIM7);
-}
-
-extern "C" void TIM1_BRK_TIM9_IRQHandler(void) {
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM9);
 }
 
 extern "C" void TIM1_UP_TIM10_IRQHandler(void) {

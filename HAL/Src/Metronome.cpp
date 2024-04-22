@@ -353,12 +353,3 @@ extern "C" void TIM4_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&htim4);
 }
-
-
-/**
- * @brief Input Capture Callback for all TIMx configured in Input Capture mode
- */
-extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-    Metronome::RouteCaptureCallback(htim);
-}
