@@ -24,19 +24,30 @@ public:
 
     TIM_TypeDef *_instance;
     TIM_HandleTypeDef htim;
+    uint32_t channel;               // the timer channel to use for various timer functions
+    bool isInputCapture = false;
+    bool isRunning = false;
+    bool resetAfterCapture = false; // reset counter after each input capture
+
     Callback<void()> overflowCallback;
+    Callback<void()> captureCallback;
 
     void init(uint32_t prescaler, uint32_t period);
+    void initInputCapture(PinName pin, uint32_t _channel, uint16_t prescaler, uint32_t period);
     void start();
     void stop();
-    // void reset();
+    void reset();
+    uint32_t getCompare();
+    float calculateCaptureFrequency();
     void setOverflowFrequency(uint32_t freq_hz);
-    void handleOverflowCallback();
 
     void attachOverflowCallback(Callback<void()> callback);
     void detachOverflowCallback();
+    void attachCaptureCallback(Callback<void()> callback);
+    void detachCaptureCallback();
 
     static HardwareTimer *TIM_INSTANCES[TIM_MAX_NUM_INSTANCES];
     static void RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim);
+    static void RouteCaptureCallback(TIM_HandleTypeDef *_htim);
     static void RouteTimerGlobalInterrupt(TIM_TypeDef *instance);
 };

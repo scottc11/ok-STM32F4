@@ -76,7 +76,7 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
 {
     __HAL_RCC_TIM2_CLK_ENABLE(); // turn on timer clock
 
-    gpio_config_input_capture(EXT_CLOCK_INPUT); // config PA3 in input capture mode
+    gpio_config_input_capture(EXT_CLOCK_INPUT, TIM_2); // config PA3 in input capture mode
 
     /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
@@ -339,17 +339,21 @@ void Metronome::RouteCaptureCallback(TIM_HandleTypeDef *htim)
 }
 
 /**
- * @brief This function handles TIM2 global interrupt.
+ * @brief static function to route timer global interrupt
+ * 
+ * @param tim_instance 
  */
-extern "C" void TIM2_IRQHandler(void)
+void Metronome::RouteTimerGlobalInterrupt(TIM_TypeDef *tim_instance)
 {
-    HAL_TIM_IRQHandler(&htim2);
-}
-
-/**
- * @brief This function handles TIM4 global interrupt.
- */
-extern "C" void TIM4_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(&htim4);
+    if (instance) // only trigger if metronome being used
+    {
+        if (tim_instance == TIM2)
+        {
+            HAL_TIM_IRQHandler(&htim2);
+        }
+        else if (tim_instance == TIM4)
+        {
+            HAL_TIM_IRQHandler(&htim4);
+        }
+    }
 }

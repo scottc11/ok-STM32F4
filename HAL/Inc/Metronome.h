@@ -24,9 +24,6 @@
 extern TIM_HandleTypeDef htim2; // 32-bit timer
 extern TIM_HandleTypeDef htim4; // 16-bit timer
 
-extern "C" void TIM2_IRQHandler(void);
-extern "C" void TIM4_IRQHandler(void);
-
 class Metronome
 {
 public:
@@ -93,6 +90,7 @@ public:
     void handleTransportInterruptPPQN();
     static void RouteOverflowCallback(TIM_HandleTypeDef *htim);
     static void RouteCaptureCallback(TIM_HandleTypeDef *htim);
+    static void RouteTimerGlobalInterrupt(TIM_TypeDef *tim_instance);
 
 private:
     static Metronome *instance;

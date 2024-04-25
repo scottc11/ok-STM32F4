@@ -102,6 +102,20 @@ int gpio_get_spi_alt_ssel(PinName pin)
     return 0;
 }
 
+int gpio_get_tim_alt(PinName pin, TIMName tim)
+{
+    int index = 0;
+    while (PinMap_TIM[index].pin != NC)
+    {
+        if (pin == PinMap_TIM[index].pin && tim == PinMap_TIM[index].peripheral)
+        {
+            return PinMap_TIM[index].function;
+        }
+        index++;
+    }
+    return 0;
+}
+
 void enable_adc_pin(PinName pin)
 {
     __HAL_RCC_ADC1_CLK_ENABLE(); /* Peripheral clock enable */
@@ -117,15 +131,15 @@ void enable_adc_pin(PinName pin)
     HAL_GPIO_Init(port, &GPIO_InitStruct);
 }
 
-void gpio_config_input_capture(PinName pin) {
+void gpio_config_input_capture(PinName pin, TIMName tim) {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     GPIO_TypeDef *port = gpio_enable_clock(pin);
     GPIO_InitStruct.Pin = gpio_get_pin(pin);
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = gpio_get_tim_alt(pin, tim);
     HAL_GPIO_Init(port, &GPIO_InitStruct);
 }
 

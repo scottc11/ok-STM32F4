@@ -31,11 +31,59 @@ void HardwareTimer::init(uint32_t prescaler, uint32_t period)
 }
 
 /**
+ * @brief Initialize a timer in input capture mode
+ * 
+ * @param instance 
+ * @param pin gpio pin to use for input capture
+ * @param _channel ex. TIM_CHANNEL_2
+ * @param prescaler 
+ * @param period 
+ */
+void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t prescaler, uint32_t period)
+{
+    this->isInputCapture = true;
+    this->channel = _channel;
+    tim_enable(this->_instance); // init clock and interrupt
+
+    intptr_t ptrInt = reinterpret_cast<intptr_t>(this->_instance);
+    gpio_config_input_capture(pin, (TIMName)ptrInt); // GPIO Init
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
+
+    this->htim.Instance = this->_instance;
+    this->htim.Init.Prescaler = prescaler;
+    this->htim.Init.CounterMode = TIM_COUNTERMODE_UP;
+    this->htim.Init.Period = period;
+    this->htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    this->htim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+    HAL_TIM_Base_Init(&this->htim);
+
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    HAL_TIM_ConfigClockSource(&this->htim, &sClockSourceConfig);
+
+    HAL_TIM_IC_Init(&this->htim);
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+
+    HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, channel);
+}
+
+/**
  * @brief Start the timer (in interrupt mode)
  * 
  */
 void HardwareTimer::start() {
-    HAL_TIM_Base_Start_IT(&htim);
+    isRunning = true;
+    if (isInputCapture) {
+        HAL_TIM_IC_Start_IT(&this->htim, channel);
+    } else {
+        HAL_TIM_Base_Start_IT(&htim);
+    }
 }
 
 /**
@@ -43,7 +91,30 @@ void HardwareTimer::start() {
  * 
  */
 void HardwareTimer::stop() {
-    HAL_TIM_Base_Stop_IT(&htim);
+    isRunning = false;
+    if (isInputCapture) {
+        HAL_TIM_IC_Stop_IT(&this->htim, channel);
+    } else {
+        HAL_TIM_Base_Stop_IT(&htim);
+    }
+}
+
+void HardwareTimer::reset()
+{
+    __HAL_TIM_SetCounter(&this->htim, 0); // reset after each input capture
+}
+
+uint32_t HardwareTimer::getCompare()
+{
+    return __HAL_TIM_GetCompare(&this->htim, this->channel);
+}
+
+float HardwareTimer::calculateCaptureFrequency()
+{
+    uint32_t inputCapture = this->getCompare();
+    uint16_t prescaler = this->htim.Init.Prescaler;
+    uint32_t timerClockHz = tim_get_APBx_freq(&this->htim);
+    return static_cast<float>(timerClockHz) / (inputCapture * (prescaler + 1));
 }
 
 /**
@@ -64,11 +135,12 @@ void HardwareTimer::detachOverflowCallback() {
     overflowCallback = NULL;
 }
 
-void HardwareTimer::handleOverflowCallback() {
-    if (overflowCallback)
-    {
-        overflowCallback();
-    }
+void HardwareTimer::attachCaptureCallback(Callback<void()> callback) {
+    captureCallback = callback;
+}
+
+void HardwareTimer::detachCaptureCallback() {
+    captureCallback = NULL;
 }
 
 /**
@@ -82,7 +154,31 @@ void HardwareTimer::RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim)
     {
         if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
         {
-            ins->handleOverflowCallback();
+            if (ins->overflowCallback)
+            {
+                ins->overflowCallback();
+            }
+            break;
+        }
+    }
+}
+
+void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
+{
+    for (auto ins : TIM_INSTANCES)
+    {
+        if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
+        {
+            if (ins->resetAfterCapture) // usually this is all you want to do after a capture
+            {
+                ins->reset();
+            } else {
+                if (ins->captureCallback)
+                {
+                    ins->captureCallback();
+                }
+            }
+            break;
         }
     }
 }
@@ -98,6 +194,7 @@ void HardwareTimer::RouteTimerGlobalInterrupt(TIM_TypeDef *instance) {
         if (ins && ins->htim.Instance == instance) // if instance not NULL
         {
             HAL_TIM_IRQHandler(&ins->htim);
+            break;
         }
     }
 }

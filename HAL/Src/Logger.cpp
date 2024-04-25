@@ -7,7 +7,7 @@ void Logger::init() {
 /**
  * @brief Logs a formatted string over USB COM Port
  *
- * @param string
+ * @param string max 32 characters!
  *
  * %d or %i: Used to print signed decimal integers.
  * %u: Used to print unsigned decimal integers.
@@ -22,13 +22,13 @@ void Logger::init() {
  */
 void Logger::log(const char *string, ...)
 {
-    char buffer[100]; // Buffer to store the formatted string
+    char buffer[32]; // Buffer to store the formatted string
 
     va_list args;           // Declare a variable argument list
     va_start(args, string); // Initialize the argument list
 
-    // Call vsprintf with the provided format string and arguments
-    vsprintf(buffer, string, args);
+    // Call vsnprintf with the provided format string and arguments
+    vsnprintf(buffer, sizeof(buffer), string, args);
 
     va_end(args); // Cleanup the argument list
 
