@@ -204,6 +204,68 @@
 //     {NC, NC, 0}
 // };
 
+//*** PWM ***
+const PinMap PinMap_TIM[] = {
+    {PA_0, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH1
+    {PA_0, TIM_5, GPIO_AF2_TIM5},         // TIM5_CH1
+    {PA_1, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH2
+    {PA_1, TIM_5, GPIO_AF2_TIM5},         // TIM5_CH2
+    {PA_2, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH3
+    {PA_2, TIM_5, GPIO_AF2_TIM5},         // TIM5_CH3
+    {PA_2, TIM_9, GPIO_AF3_TIM9},         // TIM9_CH1
+    {PA_3, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH4
+    {PA_3, TIM_5, GPIO_AF2_TIM5},         // TIM5_CH4
+    {PA_3, TIM_9, GPIO_AF3_TIM9},         // TIM9_CH2
+    {PA_5, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH1
+    {PA_5, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH1N
+    {PA_6, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH1
+    {PA_6, TIM_13, GPIO_AF9_TIM13},       // TIM13_CH1
+    {PA_7, TIM_1, GPIO_AF1_TIM1},         // TIM1_CH1N
+    {PA_7, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH2
+    {PA_7, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH1N
+    {PA_7, TIM_14, GPIO_AF9_TIM14},       // TIM14_CH1
+    {PA_8, TIM_1, GPIO_AF1_TIM1},         // TIM1_CH1
+    {PA_9, TIM_1, GPIO_AF1_TIM1},         // TIM1_CH2
+    {PA_10, TIM_1, GPIO_AF1_TIM1},        // TIM1_CH3
+    {PA_11, TIM_1, GPIO_AF1_TIM1},        // TIM1_CH4
+    {PA_15, TIM_2, GPIO_AF1_TIM2},        // TIM2_CH1
+    {PB_0, TIM_1, GPIO_AF1_TIM1},         // TIM1_CH2N
+    {PB_0, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH3
+    {PB_0, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH2N
+    {PB_1, TIM_1, GPIO_AF1_TIM1},         // TIM1_CH3N
+    {PB_1, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH4
+    {PB_1, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH3N
+    {PB_2, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH4
+    {PB_3, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH2
+    {PB_4, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH1
+    {PB_5, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH2
+    {PB_6, TIM_4, GPIO_AF2_TIM4},         // TIM4_CH1
+    {PB_7, TIM_4, GPIO_AF2_TIM4},         // TIM4_CH2
+    {PB_8, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH1
+    {PB_8, TIM_4, GPIO_AF2_TIM4},         // TIM4_CH3
+    {PB_8, TIM_10, GPIO_AF3_TIM10},       // TIM10_CH1
+    {PB_9, TIM_2, GPIO_AF1_TIM2},         // TIM2_CH2
+    {PB_9, TIM_4, GPIO_AF2_TIM4},         // TIM4_CH4
+    {PB_9, TIM_11, GPIO_AF3_TIM11},       // TIM11_CH1
+    {PB_10, TIM_2, GPIO_AF1_TIM2},        // TIM2_CH3
+    {PB_13, TIM_1, GPIO_AF1_TIM1},        // TIM1_CH1N
+    {PB_14, TIM_1, GPIO_AF1_TIM1},        // TIM1_CH2N
+    {PB_14, TIM_8, GPIO_AF3_TIM8},        // TIM8_CH2N
+    {PB_14, TIM_12, GPIO_AF9_TIM12},      // TIM12_CH1
+    {PB_15, TIM_1, GPIO_AF1_TIM1},        // TIM1_CH3N
+    {PB_15, TIM_8, GPIO_AF3_TIM8},        // TIM8_CH3N
+    {PB_15, TIM_12, GPIO_AF9_TIM12},      // TIM12_CH2
+    {PC_6, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH1
+    {PC_6, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH1
+    {PC_7, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH2
+    {PC_7, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH2
+    {PC_8, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH3
+    {PC_8, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH3
+    {PC_9, TIM_3, GPIO_AF2_TIM3},         // TIM3_CH4
+    {PC_9, TIM_8, GPIO_AF3_TIM8},         // TIM8_CH4
+    {NC, NC, 0}
+};
+
 //*** SPI ***
 
 const PinMap PinMap_SPI_MOSI[] = {
