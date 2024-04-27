@@ -174,6 +174,11 @@ extern "C" void TIM7_IRQHandler(void) {
     HardwareTimer::RouteTimerGlobalInterrupt(TIM7);
 }
 
+extern "C" void TIM1_BRK_TIM9_IRQHandler(void)
+{
+    HardwareTimer::RouteTimerGlobalInterrupt(TIM9);
+}
+
 extern "C" void TIM1_UP_TIM10_IRQHandler(void) {
     HardwareTimer::RouteTimerGlobalInterrupt(TIM10);
 }
