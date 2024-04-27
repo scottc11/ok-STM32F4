@@ -1,6 +1,8 @@
 #ifndef __OK_ALGORITHMS_H
 #define __OK_ALGORITHMS_H
 
+#include <stdlib.h>
+
 int invertIntInRange(int min, int max, int num);
 
 int getClosestInt(int val1, int val2, int target);

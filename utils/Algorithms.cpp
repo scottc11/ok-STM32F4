@@ -51,13 +51,13 @@ float findClosestValue(float array[], int size, float target)
 {
     // Initialize variables to keep track of closest value and its difference
     float closestValue = array[0];
-    float minDifference = fabs(target - array[0]);
+    float minDifference = abs(target - array[0]);
 
     // Iterate through the array to find the closest value
     for (int i = 1; i < size; ++i)
     {
         // Calculate the absolute difference between the target value and the current array element
-        float difference = fabs(target - array[i]);
+        float difference = abs(target - array[i]);
 
         // Update closestValue and minDifference if the current element is closer to the target
         if (difference < minDifference)
