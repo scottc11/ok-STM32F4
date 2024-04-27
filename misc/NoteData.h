@@ -1,10 +1,11 @@
 #pragma once
 
-#include "main.h"
 // Notes are separated by "semitone" intervals.
 // There are 12 seimtones in each octave, and fundamental frequencies are logarithmically spaced,
 // so the fundamental frequency of each note is 2(1/12) = 1.0595 times the previous frequency.
 // 1145 * .9405 ==
+
+#include <stdint.h>
 
 #define NOTE_DATA_LENGTH 120
 
@@ -383,12 +384,6 @@ const float NOTE_FREQ_MAP[NOTE_DATA_LENGTH] = {
     15804.26 //  B9
 };
 
-float getNoteFrequency(Note note)
-{
-    return NOTE_DATA_MAP[note].frequency;
-}
+float getNoteFrequency(Note note);
 
-uint8_t getNoteMidi(Note note)
-{
-    return NOTE_DATA_MAP[note].midi;
-}
+uint8_t getNoteMidi(Note note);
