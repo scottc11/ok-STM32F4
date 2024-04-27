@@ -258,7 +258,7 @@ const NoteData NOTE_DATA_MAP[NOTE_DATA_LENGTH] = {
     {14080.00, 129}, // A9
     {14917.24, 130}, // A#9/Bb9
     {15804.26, 131} // B9
-}
+};
 
 const float NOTE_FREQ_MAP[NOTE_DATA_LENGTH] = {
     16.352,  //  C0
