@@ -172,11 +172,10 @@ void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
             if (ins->resetAfterCapture) // usually this is all you want to do after a capture
             {
                 ins->reset();
-            } else {
-                if (ins->captureCallback)
-                {
-                    ins->captureCallback();
-                }
+            }
+            if (ins->captureCallback)
+            {
+                ins->captureCallback();
             }
             break;
         }
