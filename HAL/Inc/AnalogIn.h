@@ -54,6 +54,7 @@ public:
     Callback<void(uint16_t progress)> samplingProgressCallback;
 
     uint16_t read_u16();
+    uint16_t read_u12();
     void setFilter(float value);
     void enableFilter() { filter = true; }
     void disableFilter() { filter = false; }

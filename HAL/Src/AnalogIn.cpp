@@ -37,7 +37,13 @@ AnalogIn::AnalogIn(PinName _pin)
 
 uint16_t AnalogIn::read_u16()
 {
-    return invert ? BIT_MAX_16 - currValue : currValue;
+    
+    return invert ? BIT_MAX_16 - convert12to16(currValue) : convert12to16(currValue);
+}
+
+uint16_t AnalogIn::read_u12()
+{
+    return invert ? BIT_MAX_12 - currValue : currValue;
 }
 
 void AnalogIn::invertReadings()
@@ -58,7 +64,7 @@ void AnalogIn::setFilter(float value)
     }
     else
     {
-        prevValue = convert12to16(DMA_BUFFER[index]);
+        prevValue = DMA_BUFFER[index];
         filterAmount = value;
         filter = true;
     }
@@ -119,7 +125,7 @@ void AnalogIn::sampleSignalNoise(uint16_t sample)
 void AnalogIn::sampleReadyCallback(uint16_t sample)
 {
     prevValue = currValue;
-    currValue = convert12to16(sample);
+    currValue = sample;
     if (filter)
     {
         currValue = filter_one_pole<uint16_t>(currValue, prevValue, filterAmount);
