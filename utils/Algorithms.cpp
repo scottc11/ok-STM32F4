@@ -39,6 +39,39 @@ float getClosestFloat(float val1, float val2, float target)
         return val1;
 }
 
+/**
+ * Linearly interpolates the y value for a given x value based on the given data points.
+ * 
+ * @param targetX the x value for which we want to find the y value
+ * @param x the array of x values
+ * @param y the array of y values
+ * @param num_plots the number of data points
+ * @return the interpolated y value
+*/
+uint16_t linear_interpolation(uint16_t targetX, uint32_t x[], uint32_t y[], int num_plots)
+{
+    // Find the index of the left neighbor
+    int leftIndex = 0;
+    while (leftIndex < num_plots && x[leftIndex] < targetX)
+    {
+        leftIndex++;
+    }
+
+    // Check if targetX is out of range
+    if (leftIndex == 0 || leftIndex == num_plots)
+    {
+        return 0; // or handle out of range error
+    }
+
+    // Calculate the interpolated y value using linear interpolation formula
+    float x0 = x[leftIndex - 1];
+    float x1 = x[leftIndex];
+    float y0 = y[leftIndex - 1];
+    float y1 = y[leftIndex];
+
+    return (uint16_t)(y0 + ((float)targetX - x0) * (y1 - y0) / (x1 - x0));
+}
+
 // /**
 //  * @brief function to find the closest value in an array of floats to a target float
 //  * 
