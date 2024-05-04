@@ -159,6 +159,7 @@ extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     Metronome::RouteCaptureCallback(htim);
+    HardwareTimer::RouteCaptureCallback(htim);
     OK_TIM_IC_CaptureCallback(htim);
 }
 
