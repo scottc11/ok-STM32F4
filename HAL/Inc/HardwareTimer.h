@@ -25,6 +25,10 @@ public:
     TIM_TypeDef *_instance;
     TIM_HandleTypeDef htim;
     uint32_t channel;               // the timer channel to use for various timer functions
+    
+    uint32_t overflowCount = 0;
+    uint32_t prevOverflowCount = 0;
+    
     bool isInputCapture = false;
     bool isRunning = false;
     bool resetAfterCapture = false; // reset counter after each input capture

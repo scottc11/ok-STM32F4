@@ -81,6 +81,7 @@ void HardwareTimer::start() {
     isRunning = true;
     if (isInputCapture) {
         HAL_TIM_IC_Start_IT(&this->htim, channel);
+        HAL_TIM_Base_Start_IT(&htim); // the overflow interrupt is useful for very low frequency signals
     } else {
         HAL_TIM_Base_Start_IT(&htim);
     }
@@ -101,6 +102,8 @@ void HardwareTimer::stop() {
 
 void HardwareTimer::reset()
 {
+    this->prevOverflowCount = this->overflowCount;
+    this->overflowCount = 0;
     __HAL_TIM_SetCounter(&this->htim, 0); // reset after each input capture
 }
 
@@ -111,10 +114,10 @@ uint32_t HardwareTimer::getCompare()
 
 float HardwareTimer::calculateCaptureFrequency()
 {
-    uint32_t inputCapture = this->getCompare();
+    uint32_t inputCapture = this->getCompare() + (this->prevOverflowCount * (this->htim.Init.Period + 1));
     uint16_t prescaler = this->htim.Init.Prescaler;
     uint32_t timerClockHz = tim_get_APBx_freq(&this->htim);
-    return static_cast<float>(timerClockHz) / (inputCapture * (prescaler + 1));
+    return static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));
 }
 
 /**
@@ -154,6 +157,7 @@ void HardwareTimer::RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim)
     {
         if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
         {
+            ins->overflowCount++;
             if (ins->overflowCallback)
             {
                 ins->overflowCallback();
