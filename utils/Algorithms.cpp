@@ -48,7 +48,7 @@ float getClosestFloat(float val1, float val2, float target)
  * @param num_plots the number of data points
  * @return the interpolated y value
 */
-uint16_t linear_interpolation(uint16_t targetX, uint32_t x[], uint32_t y[], int num_plots)
+uint32_t linear_interpolation(uint32_t targetX, uint32_t x[], uint32_t y[], int num_plots)
 {
     // Find the index of the left neighbor
     int leftIndex = 0;
@@ -69,7 +69,31 @@ uint16_t linear_interpolation(uint16_t targetX, uint32_t x[], uint32_t y[], int 
     float y0 = y[leftIndex - 1];
     float y1 = y[leftIndex];
 
-    return (uint16_t)(y0 + ((float)targetX - x0) * (y1 - y0) / (x1 - x0));
+    return (uint32_t)(y0 + ((float)targetX - x0) * (y1 - y0) / (x1 - x0));
+}
+
+float linear_interpolation_f(float targetX, float x[], float y[], int num_plots)
+{
+    // Find the index of the left neighbor
+    int leftIndex = 0;
+    while (leftIndex < num_plots && x[leftIndex] < targetX)
+    {
+        leftIndex++;
+    }
+
+    // Check if targetX is out of range
+    if (leftIndex == 0 || leftIndex == num_plots)
+    {
+        return 0; // or handle out of range error
+    }
+
+    // Calculate the interpolated y value using linear interpolation formula
+    float x0 = x[leftIndex - 1];
+    float x1 = x[leftIndex];
+    float y0 = y[leftIndex - 1];
+    float y1 = y[leftIndex];
+
+    return (float)(y0 + ((float)targetX - x0) * (y1 - y0) / (x1 - x0));
 }
 
 // /**
