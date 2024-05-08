@@ -144,7 +144,6 @@ static QueueHandle_t logger_queue = NULL;
 void logger_queue_message(uint16_t message) {
     BaseType_t xHigherPriorityTaskWoken;
     xHigherPriorityTaskWoken = pdFALSE;
-    uint16_t _message = message;
     xQueueSendFromISR(logger_queue, (void *)&message, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
