@@ -155,6 +155,18 @@ void set_pin_pull(GPIO_InitTypeDef *config, PinMode mode) {
     case PullNone:
         config->Pull = GPIO_NOPULL;
         break;
+    case OpenDrainPullUp:
+        config->Pull = GPIO_PULLUP;
+        config->Mode = GPIO_MODE_AF_OD;
+        break;
+    case OpenDrainNoPull:
+        config->Pull = GPIO_NOPULL;
+        config->Mode = GPIO_MODE_AF_OD;
+        break;
+    case OpenDrainPullDown:
+        config->Pull = GPIO_PULLDOWN;
+        config->Mode = GPIO_MODE_AF_OD;
+        break;
     }
 }
 
