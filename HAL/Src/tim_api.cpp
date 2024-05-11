@@ -109,6 +109,8 @@ void tim_enable(TIM_TypeDef *instance) {
         __HAL_RCC_TIM7_CLK_ENABLE();
         HAL_NVIC_SetPriority(TIM7_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
         HAL_NVIC_EnableIRQ(TIM7_IRQn);
+    } else if (instance == TIM8) {
+        // USED FOR ADC
     } else if (instance == TIM9) {
         __HAL_RCC_TIM9_CLK_ENABLE();
         HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);

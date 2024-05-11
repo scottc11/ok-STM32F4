@@ -12,7 +12,7 @@ hardware oversampling feature can be configured to process up to 1024 input samp
 
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
-TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim8;
 
 SemaphoreHandle_t AnalogIn::semaphore;
 AnalogIn *AnalogIn::ADC_INSTANCES[ADC_DMA_BUFF_SIZE] = {0};
@@ -293,7 +293,7 @@ void AnalogIn::initialize(uint16_t sample_rate)
     hadc1.Init.ContinuousConvMode = DISABLE;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
-    hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T3_TRGO;
+    hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T8_TRGO;
     hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
     hadc1.Init.NbrOfConversion = ADC_DMA_BUFF_SIZE; // suspicious... should this be ADC_DMA_BUFF_SIZE?
     hadc1.Init.DMAContinuousRequests = ENABLE;
@@ -322,31 +322,31 @@ void AnalogIn::initialize(uint16_t sample_rate)
     }
 
     // initialize TIM3
-    __HAL_RCC_TIM3_CLK_ENABLE();
+    __HAL_RCC_TIM8_CLK_ENABLE();
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-    htim3.Instance = TIM3;
-    htim3.Init.Prescaler = ADC_TIM_PRESCALER;
-    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3.Init.Period = ADC_TIM_PERIOD;
-    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    HAL_TIM_Base_Init(&htim3);
+    htim8.Instance = TIM8;
+    htim8.Init.Prescaler = ADC_TIM_PRESCALER;
+    htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim8.Init.Period = ADC_TIM_PERIOD;
+    htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    HAL_TIM_Base_Init(&htim8);
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig);
+    HAL_TIM_ConfigClockSource(&htim8, &sClockSourceConfig);
 
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
+    HAL_TIMEx_MasterConfigSynchronization(&htim8, &sMasterConfig);
 
     // set sample rate
     setSampleRate(sample_rate);
 
     // start timer
-    HAL_TIM_Base_Start(&htim3);
+    HAL_TIM_Base_Start(&htim8);
     
     // start ADC in DMA mode
     HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogIn::DMA_BUFFER, ADC_DMA_BUFF_SIZE);
@@ -357,19 +357,19 @@ void AnalogIn::setSampleRate(uint32_t sample_rate_hz)
     switch (hadc1.Init.ClockPrescaler)
     {
     case ADC_CLOCK_SYNC_PCLK_DIV2:
-        tim_set_overflow_freq(&htim3, sample_rate_hz * 2);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 2);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV4:
-        tim_set_overflow_freq(&htim3, sample_rate_hz * 4);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 4);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV6:
-        tim_set_overflow_freq(&htim3, sample_rate_hz * 6);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 6);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV8:
-        tim_set_overflow_freq(&htim3, sample_rate_hz * 8);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 8);
         break;
     default:
-        tim_set_overflow_freq(&htim3, sample_rate_hz);
+        tim_set_overflow_freq(&htim8, sample_rate_hz);
         break;
     }
 }
