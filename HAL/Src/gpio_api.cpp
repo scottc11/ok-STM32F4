@@ -17,6 +17,9 @@ GPIO_TypeDef * gpio_enable_clock(PinName pin)
         case PortC:
             __HAL_RCC_GPIOC_CLK_ENABLE();
             return GPIOC;
+        case PortD:
+            __HAL_RCC_GPIOD_CLK_ENABLE();
+            return GPIOD;
         case PortH:
             __HAL_RCC_GPIOH_CLK_ENABLE();
             return GPIOH;
