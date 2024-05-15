@@ -6,6 +6,7 @@
 // 1145 * .9405 ==
 
 #include <stdint.h>
+#include "utils.h"
 
 #define NOTE_DATA_LENGTH 120
 
@@ -387,3 +388,5 @@ const float NOTE_FREQ_MAP[NOTE_DATA_LENGTH] = {
 float getNoteFrequency(Note note);
 
 uint8_t getNoteMidi(Note note);
+
+Note getNoteIndexFromMidi(uint8_t midi);
