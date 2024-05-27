@@ -38,5 +38,6 @@
 #define HIGH 1
 #define LOW 0
 
+#define BIT_MAX_32 4294967295
 #define BIT_MAX_16 65535
 #define BIT_MAX_12 4095
