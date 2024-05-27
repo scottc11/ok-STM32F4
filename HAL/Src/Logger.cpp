@@ -35,8 +35,14 @@ void Logger::log(const char *string, ...)
     CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
 }
 
-void Logger::log(int number) {
+void Logger::log(int number)
+{
     this->log("%d\n", number);
+}
+
+void Logger::log(float number)
+{
+    this->log("%.3f\n", number);
 }
 
 void Logger::logSystemStatus() {
