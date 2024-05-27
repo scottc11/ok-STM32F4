@@ -22,7 +22,7 @@ void Logger::init() {
  */
 void Logger::log(const char *string, ...)
 {
-    char buffer[32]; // Buffer to store the formatted string
+    char buffer[48]; // Buffer to store the formatted string
 
     va_list args;           // Declare a variable argument list
     va_start(args, string); // Initialize the argument list
@@ -31,8 +31,7 @@ void Logger::log(const char *string, ...)
     vsnprintf(buffer, sizeof(buffer), string, args);
 
     va_end(args); // Cleanup the argument list
-
-    CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
+    while(CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer)) == USBD_BUSY);
 }
 
 void Logger::log(int number)
