@@ -48,6 +48,7 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
     intptr_t ptrInt = reinterpret_cast<intptr_t>(this->_instance);
     gpio_config_input_capture(pin, (TIMName)ptrInt); // GPIO Init
 
+    HAL_StatusTypeDef status;
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_IC_InitTypeDef sConfigIC = {0};
 
@@ -58,19 +59,35 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
     this->htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     this->htim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-    HAL_TIM_Base_Init(&this->htim);
+    status = HAL_TIM_Base_Init(&this->htim);
+    if (status != HAL_OK)
+    {
+        error_handler(status);
+    }
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    HAL_TIM_ConfigClockSource(&this->htim, &sClockSourceConfig);
+    status = HAL_TIM_ConfigClockSource(&this->htim, &sClockSourceConfig);
+    if (status != HAL_OK)
+    {
+        error_handler(status);
+    }
 
-    HAL_TIM_IC_Init(&this->htim);
+    status = HAL_TIM_IC_Init(&this->htim);
+    if (status != HAL_OK)
+    {
+        error_handler(status);
+    }
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
     sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
     sConfigIC.ICFilter = 0;
 
-    HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, channel);
+    status = HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, channel);
+    if (status != HAL_OK)
+    {
+        error_handler(status);
+    }
 }
 
 /**
@@ -95,6 +112,7 @@ void HardwareTimer::stop() {
     isRunning = false;
     if (isInputCapture) {
         HAL_TIM_IC_Stop_IT(&this->htim, channel);
+        HAL_TIM_Base_Stop_IT(&htim);
     } else {
         HAL_TIM_Base_Stop_IT(&htim);
     }
@@ -128,6 +146,16 @@ float HardwareTimer::calculateCaptureFrequency()
 void HardwareTimer::setOverflowFrequency(uint32_t freq_hz)
 {
     tim_set_overflow_freq(&this->htim, freq_hz);
+}
+
+/**
+ * @brief Set the amount of rising/falling edges to count before triggering the input capture interrupt
+ *
+ * @param prescaler TIM_ICPSC_DIV1, TIM_ICPSC_DIV2, TIM_ICPSC_DIV4, TIM_ICPSC_DIV8
+ */
+void HardwareTimer::setCapturePrescaler(uint16_t prescaler)
+{
+    __HAL_TIM_SetICPrescaler(&this->htim, channel, prescaler);
 }
 
 void HardwareTimer::attachOverflowCallback(Callback<void()> callback) {

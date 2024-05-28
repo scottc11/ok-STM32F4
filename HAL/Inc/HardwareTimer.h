@@ -44,6 +44,7 @@ public:
     uint32_t getCompare();
     float calculateCaptureFrequency();
     void setOverflowFrequency(uint32_t freq_hz);
+    void setCapturePrescaler(uint16_t prescaler);
 
     void attachOverflowCallback(Callback<void()> callback);
     void detachOverflowCallback();
