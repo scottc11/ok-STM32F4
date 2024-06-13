@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include "common.h"
 #include "Callback.h"
 #include "tim_api.h"
@@ -28,10 +29,12 @@ public:
     
     uint32_t overflowCount = 0;
     uint32_t prevOverflowCount = 0;
+    int prevCapture = 0;
+    int currCapture = 0;
+    float captureFrequency = 0.0;
     
     bool isInputCapture = false;
     bool isRunning = false;
-    bool resetAfterCapture = false; // reset counter after each input capture
 
     Callback<void()> overflowCallback;
     Callback<void()> captureCallback;
@@ -41,10 +44,11 @@ public:
     void start();
     void stop();
     void reset();
-    uint32_t getCompare();
+    uint32_t getCapture();
     float calculateCaptureFrequency();
     void setOverflowFrequency(uint32_t freq_hz);
     void setCapturePrescaler(uint16_t prescaler);
+    uint8_t getCapturePrescaler();
 
     void attachOverflowCallback(Callback<void()> callback);
     void detachOverflowCallback();

@@ -120,22 +120,27 @@ void HardwareTimer::stop() {
 
 void HardwareTimer::reset()
 {
-    this->prevOverflowCount = this->overflowCount;
     this->overflowCount = 0;
+    this->prevOverflowCount = 0;
+    this->currCapture = 0;
+    this->prevCapture = 0;
     __HAL_TIM_SetCounter(&this->htim, 0); // reset after each input capture
 }
 
-uint32_t HardwareTimer::getCompare()
+uint32_t HardwareTimer::getCapture()
 {
     return __HAL_TIM_GetCompare(&this->htim, this->channel);
 }
 
 float HardwareTimer::calculateCaptureFrequency()
 {
-    uint32_t inputCapture = this->getCompare() + (this->prevOverflowCount * (this->htim.Init.Period + 1));
+    // int32_t inputCapture = abs(this->currCapture - this->prevCapture) / ;
+    uint8_t capturePrescaler = getCapturePrescaler();
+    int32_t inputCapture = abs(this->currCapture - this->prevCapture) / capturePrescaler;
     uint16_t prescaler = this->htim.Init.Prescaler;
     uint32_t timerClockHz = tim_get_APBx_freq(&this->htim);
-    return static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));
+    captureFrequency = static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));
+    return captureFrequency;
 }
 
 /**
@@ -156,6 +161,29 @@ void HardwareTimer::setOverflowFrequency(uint32_t freq_hz)
 void HardwareTimer::setCapturePrescaler(uint16_t prescaler)
 {
     __HAL_TIM_SetICPrescaler(&this->htim, channel, prescaler);
+}
+
+/**
+ * @brief Get the amount of rising/falling edges to count before triggering the input capture interrupt
+ *
+ * @return uint8_t the integer equivelent of the prescaler
+ */
+uint8_t HardwareTimer::getCapturePrescaler()
+{
+    uint32_t prescaler = __HAL_TIM_GetICPrescaler(&this->htim, channel);
+    switch (prescaler)
+    {
+        case TIM_ICPSC_DIV1:
+            return 1;
+        case TIM_ICPSC_DIV2:
+            return 2;
+        case TIM_ICPSC_DIV4:
+            return 4;
+        case TIM_ICPSC_DIV8:
+            return 8;
+        default:
+            return 1;
+    }
 }
 
 void HardwareTimer::attachOverflowCallback(Callback<void()> callback) {
@@ -201,10 +229,9 @@ void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
     {
         if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
         {
-            if (ins->resetAfterCapture) // usually this is all you want to do after a capture
-            {
-                ins->reset();
-            }
+            ins->prevCapture = ins->currCapture;
+            ins->prevOverflowCount = ins->overflowCount;
+            ins->currCapture = ins->getCapture() + (ins->overflowCount * (ins->htim.Init.Period + 1));
             if (ins->captureCallback)
             {
                 ins->captureCallback();
