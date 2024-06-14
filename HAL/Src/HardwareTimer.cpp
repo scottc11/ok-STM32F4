@@ -134,9 +134,8 @@ uint32_t HardwareTimer::getCapture()
 
 float HardwareTimer::calculateCaptureFrequency()
 {
-    // int32_t inputCapture = abs(this->currCapture - this->prevCapture) / ;
     uint8_t capturePrescaler = getCapturePrescaler();
-    int32_t inputCapture = abs(this->currCapture - this->prevCapture) / capturePrescaler;
+    int32_t inputCapture = std::abs(this->currCapture - this->prevCapture) / capturePrescaler;
     uint16_t prescaler = this->htim.Init.Prescaler;
     uint32_t timerClockHz = tim_get_APBx_freq(&this->htim);
     captureFrequency = static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));

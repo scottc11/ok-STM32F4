@@ -1,6 +1,5 @@
 #pragma once
 
-#include <math.h>
 #include "common.h"
 #include "Callback.h"
 #include "tim_api.h"
