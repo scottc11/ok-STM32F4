@@ -72,6 +72,15 @@ uint32_t linear_interpolation(uint32_t targetX, uint32_t x[], uint32_t y[], int 
     return (uint32_t)(y0 + ((float)targetX - x0) * (y1 - y0) / (x1 - x0));
 }
 
+/**
+ * @brief Linearly interpolates the y value for a given x value based on the given data points.
+ * 
+ * @param targetX 
+ * @param x 
+ * @param y 
+ * @param num_plots 
+ * @return float 
+ */
 float linear_interpolation_f(float targetX, float x[], float y[], int num_plots)
 {
     // Find the index of the left neighbor
