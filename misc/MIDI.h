@@ -24,14 +24,16 @@ class MIDI {
         bool processByte(uint8_t byte);
         void parseMessage(uint8_t *data);
         
-        void attachHandleNoteOnCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { handleNoteOnCallback = callback; }
-        void attachHandleNoteOffCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { handleNoteOffCallback = callback; }
+        void attachNoteOnCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOnCallback = callback; }
+        void attachNoteOffCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOffCallback = callback; }
+        void attachPitchBendCallback(Callback<void(uint8_t channel, uint16_t pitch)> callback) { pitchBendCallback = callback; }
 
         static uint8_t BUFFER_IN[3];
 
     private:
-        Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> handleNoteOnCallback;
-        Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> handleNoteOffCallback;
+        Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOnCallback;
+        Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOffCallback;
+        Callback<void(uint8_t channel, uint16_t pitch)> pitchBendCallback;
         
         uint8_t getChannel(uint8_t status);
 };

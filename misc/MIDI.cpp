@@ -55,13 +55,13 @@ void MIDI::parseMessage(uint8_t *data)
         switch (event)
         {
         case MIDIstatus::NOTE_OFF:
-            if (handleNoteOffCallback)
-                handleNoteOffCallback(channel, data[1], data[2]);
+            if (noteOffCallback)
+                noteOffCallback(channel, data[1], data[2]);
             break;
         
         case MIDIstatus::NOTE_ON:
-            if (handleNoteOnCallback)
-                handleNoteOnCallback(channel, data[1], data[2]);
+            if (noteOnCallback)
+                noteOnCallback(channel, data[1], data[2]);
             break;
 
         case MIDIstatus::POLYPHONIC_KEY_PRESSURE:
@@ -81,7 +81,8 @@ void MIDI::parseMessage(uint8_t *data)
             break;
 
         case MIDIstatus::PITCH_BEND:
-            /* code */
+            if (pitchBendCallback)
+                pitchBendCallback(channel, (data[2] << 7) | data[1]);
             break;
             
         default:
