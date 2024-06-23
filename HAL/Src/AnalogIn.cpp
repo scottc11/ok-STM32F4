@@ -357,19 +357,19 @@ void AnalogIn::setSampleRate(uint32_t sample_rate_hz)
     switch (hadc1.Init.ClockPrescaler)
     {
     case ADC_CLOCK_SYNC_PCLK_DIV2:
-        tim_set_overflow_freq(&htim8, sample_rate_hz * 2);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 2, BIT_MAX_16);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV4:
-        tim_set_overflow_freq(&htim8, sample_rate_hz * 4);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 4, BIT_MAX_16);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV6:
-        tim_set_overflow_freq(&htim8, sample_rate_hz * 6);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 6, BIT_MAX_16);
         break;
     case ADC_CLOCK_SYNC_PCLK_DIV8:
-        tim_set_overflow_freq(&htim8, sample_rate_hz * 8);
+        tim_set_overflow_freq(&htim8, sample_rate_hz * 8, BIT_MAX_16);
         break;
     default:
-        tim_set_overflow_freq(&htim8, sample_rate_hz);
+        tim_set_overflow_freq(&htim8, sample_rate_hz, BIT_MAX_16);
         break;
     }
 }

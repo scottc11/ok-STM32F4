@@ -45,7 +45,11 @@ public:
     void reset();
     uint32_t getCapture();
     float calculateCaptureFrequency();
-    void setOverflowFrequency(uint32_t freq_hz);
+    void setOverflowFrequency(uint32_t freq_hz, uint32_t maxTimerResolution = 65535);
+
+    void setPrescaler(uint16_t prescaler);
+    void setPeriod(uint32_t period);
+
     void setCapturePrescaler(uint16_t prescaler);
     uint8_t getCapturePrescaler();
 

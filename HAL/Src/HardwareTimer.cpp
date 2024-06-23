@@ -147,10 +147,32 @@ float HardwareTimer::calculateCaptureFrequency()
  * 
  * @param freq_hz ex. 1 == 1 second, 2, 0.5s, etc.
  */
-void HardwareTimer::setOverflowFrequency(uint32_t freq_hz)
+void HardwareTimer::setOverflowFrequency(uint32_t freq_hz, uint32_t maxTimerResolution /*65535*/)
 {
-    tim_set_overflow_freq(&this->htim, freq_hz);
+    tim_set_overflow_freq(&this->htim, freq_hz, maxTimerResolution);
 }
+
+/**
+ * @brief Set the prescaler of a timer
+ * 
+ * @param prescaler 
+ */
+void HardwareTimer::setPrescaler(uint16_t prescaler)
+{
+    __HAL_TIM_SET_PRESCALER(&this->htim, prescaler);
+}
+
+/**
+ * @brief set the auto-reload / period of a timer (it also resets the counter to 0)
+ * 
+ * @param period 
+ */
+void HardwareTimer::setPeriod(uint32_t period)
+{
+    __HAL_TIM_SetCounter(&this->htim,  0);
+    __HAL_TIM_SET_AUTORELOAD(&this->htim, period);
+}
+
 
 /**
  * @brief Set the amount of rising/falling edges to count before triggering the input capture interrupt

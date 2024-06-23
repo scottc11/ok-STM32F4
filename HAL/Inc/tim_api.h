@@ -23,7 +23,7 @@ uint32_t tim_get_APBx_freq(TIM_HandleTypeDef *htim);
 
 uint32_t tim_get_overflow_freq(TIM_HandleTypeDef *htim);
 
-void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t target_freq);
+void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, uint32_t maxTimerResolution);
 
 void tim_enable(TIM_TypeDef *instance);
 

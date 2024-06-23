@@ -41,40 +41,29 @@ uint32_t tim_get_overflow_freq(TIM_HandleTypeDef *htim)
     return APBx_freq / ((prescaler + 1) * (period + 1));
 }
 
+
 /**
  * @brief set the prescaler and period of a timer based on a target frequency
  *
- * @note If this function starts recursively calling itself, it can someimes crash the program
- * The initial prescaler values plays a large part in this
- * @note Recursive Functions: Recursive functions that call themselves without a proper termination condition or with a large number of recursive calls can quickly consume stack space and lead to a stack overflow.
- *
- * period = APBx / (prescaler * target_frequency)
- *
- * TODO: when period gets set to less than 1, than target frequency is not possible given the current prescaler value.
- * So subtract the prescaler value by 1 and try again until target frequency can be achieved.
- *
- * @param htim
- * @param target_freq
+ * @param htim 
+ * @param targetFrequency ex. 1 == 1 second, 2, 0.5s, etc.
+ * @param maxTimerResolution ex. 65535 for 16-bit timers
  */
-void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t target_freq) {
-    uint16_t prescaler = htim->Instance->PSC;
-    uint32_t APBx_freq = tim_get_APBx_freq(htim);
-    uint32_t period = APBx_freq / ((prescaler + 1) * target_freq);
-
-    if (period > BIT_MAX_16) // adjust prescaler and recursively call this function
-    { 
-        __HAL_TIM_SET_PRESCALER(htim, prescaler + 1);
-        vTaskDelay(1);
-        tim_set_overflow_freq(htim, target_freq);
-        return;
-    } else if (period < 1000) {
-        __HAL_TIM_SET_PRESCALER(htim, prescaler - 1);
-        vTaskDelay(1);
-        tim_set_overflow_freq(htim, target_freq);
-        return;
+void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, uint32_t maxTimerResolution)
+{
+    // period = APBx / (prescaler * target_frequency)
+    uint32_t timerBusSpeed = tim_get_APBx_freq(htim);
+    uint32_t targetTimerCounts = timerBusSpeed / targetFrequency;
+    uint16_t prescaler = 1;
+    uint32_t period = targetTimerCounts;
+    while (period > maxTimerResolution)
+    {
+        prescaler++;
+        period = targetTimerCounts / prescaler;
     }
+    __HAL_TIM_SET_PRESCALER(htim, prescaler - 1);
     __HAL_TIM_SetCounter(htim, 0);
-    __HAL_TIM_SET_AUTORELOAD(htim, period);
+    __HAL_TIM_SET_AUTORELOAD(htim, period - 1);
 }
 
 /**
