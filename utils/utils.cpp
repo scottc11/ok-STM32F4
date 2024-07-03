@@ -1,5 +1,15 @@
 #include "utils.h"
 
+/**
+ * @brief convert a floating-point value to a uint16_t value
+ *
+ * @note 👀 ok-STM32F4/CMSIS/DSP/Source/SupportFunctions/arm_float_to_q15.c
+ *
+ * @param f
+ * @param min
+ * @param max
+ * @return uint16_t
+ */
 uint16_t ok_float_to_u16(float f, float min, float max)
 {
     // Scale the floating-point value to fit within the range of uint16_t
