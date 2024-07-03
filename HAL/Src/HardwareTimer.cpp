@@ -251,7 +251,7 @@ void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
         if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
         {
             ins->prevCapture = ins->currCapture;
-            ins->prevOverflowCount = ins->overflowCount;
+            ins->prevOverflowCount = ins->overflowCount; // NOTE: this has the chance to be off by 1 (if overflow occurs while software executes this line)
             ins->currCapture = ins->getCapture() + (ins->overflowCount * (ins->htim.Init.Period + 1));
             if (ins->captureCallback)
             {
