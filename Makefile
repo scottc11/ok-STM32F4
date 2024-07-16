@@ -73,8 +73,9 @@ C_INCLUDES += \
 -I$(LIB_PATH)/cxxsupport \
 -I$(LIB_PATH)/STM32F4xx_HAL_Driver/Inc \
 -I$(LIB_PATH)/STM32F4xx_HAL_Driver/Inc/Legacy \
--I$(LIB_PATH)/CMSIS/Device/ST/STM32F4xx/Include \
 -I$(LIB_PATH)/CMSIS/Include \
+-I$(LIB_PATH)/CMSIS/Device/ST/STM32F4xx/Include \
+-I$(LIB_PATH)/CMSIS/DSP/Include \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/include \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/CMSIS_RTOS_V2 \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/portable/GCC/ARM_CM4F \
@@ -155,6 +156,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
+-DARM_MATH_CM4 \
 -DSTM32F446xx
 
 
@@ -209,6 +211,9 @@ CPP_STANDARD += -std=gnu++14
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+
+# CMSIS ARM math library
+LDFLAGS += -L$(LIB_PATH)/CMSIS/Lib/GCC -larm_cortexM4lf_math
 
 # enable printf float support (increases build size)
 ifdef USB_DEBUG
