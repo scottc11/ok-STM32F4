@@ -4,7 +4,7 @@
 #include "Callback.h"
 
 #ifndef PPQN
-#define PPQN 96
+#define PPQN 24
 #endif
 
 #define RATCHET_DIV_1 PPQN / 1

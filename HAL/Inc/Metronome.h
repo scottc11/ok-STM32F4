@@ -8,7 +8,7 @@
 #include "InterruptIn.h"
 
 #ifndef PPQN
-#define PPQN 96
+#define PPQN 24
 #endif
 
 #define PPQN_8th (PPQN / 2)
