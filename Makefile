@@ -246,15 +246,27 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+# Progress tracking
+TOTAL_FILES := $(words $(OBJECTS))
+CURRENT_FILE := 0
+
+define progress_bar
+    $(eval CURRENT_FILE=$(shell echo $$(($(CURRENT_FILE)+1))))
+    @echo -ne "\033[1;32mBuilding \033[1;34m[$(CURRENT_FILE)/$(TOTAL_FILES)] \033[1;32m- $1\033[0m\r"
+endef
+
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+	$(call progress_bar,$<)
+	@$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR)
 	mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) -c $< -o $@
+	$(call progress_bar,$<)
+	@$(CXX) $(CPPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
-	$(AS) -c $(CFLAGS) $< -o $@
+	$(call progress_bar,$<)
+	@$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
