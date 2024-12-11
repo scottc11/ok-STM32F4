@@ -7,4 +7,5 @@
 __weak HAL_StatusTypeDef error_handler(HAL_StatusTypeDef error)
 {
     UNUSED(error);
+    return error;
 }
