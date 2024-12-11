@@ -21,3 +21,5 @@ constexpr T ok_clamp(T x, T min, T max)
 }
 
 uint16_t ok_float_to_u16(float f, float min, float max);
+
+uint16_t ok_voltage_to_data(float targetVoltage, float minVoltage, float maxVoltage, uint16_t resolution);
