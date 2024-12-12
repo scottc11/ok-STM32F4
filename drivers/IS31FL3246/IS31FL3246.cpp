@@ -65,6 +65,8 @@ void IS31FL3246::setGlobalCurrent(uint8_t red, uint8_t green, uint8_t blue)
 
 /**
  * @brief High Frequency PWM Low Byte Duty Value (0x00~0xFF)
+ * 
+ * @param channel number from 1 to 36 corresponding to the LED channel
  *
  */
 void IS31FL3246::setChannelPWM(int channel, uint8_t pwm, bool update /* = true*/)
