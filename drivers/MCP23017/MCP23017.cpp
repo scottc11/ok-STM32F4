@@ -121,6 +121,28 @@ void MCP23017::digitalWrite(char _port, char _value) {
 	i2cSend(REG_GPIO + _port, _value);
 }
 
+/**
+ * @brief Write to a specific pin on a specific port
+ * 
+ * @param port 
+ * @param pin 
+ * @param set 
+ */
+void MCP23017::digitalWrite(char port, int pin, bool set)
+{
+	char value = i2cRead(REG_GPIO + port);
+	if (set)
+	{
+		value |= (1 << pin);
+	}
+	else
+	{
+		value &= ~(1 << pin);
+	}
+	i2cSend(REG_GPIO + port, value);
+}
+
+
 char MCP23017::digitalRead(char _port) {
 	return i2cRead(REG_GPIO + _port);
 }

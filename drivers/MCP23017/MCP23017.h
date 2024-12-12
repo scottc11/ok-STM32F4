@@ -57,6 +57,7 @@ class MCP23017 {
 	void setInputPolarity(char _port, char _value);   // invert pin input polarity
 	void setInterupt(char _port, char _value);        // enable/disable interupts per pin/port
 	void digitalWrite(char _port, char _value);
+	void digitalWrite(char port, int pin, bool set);
 	char digitalRead(char _port);
 	uint16_t digitalReadAB();
 	
