@@ -15,14 +15,14 @@ void Metronome::start()
 {
     this->reset();
     HAL_StatusTypeDef status;
-    status = HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
+    status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
     error_handler(status);
     status = HAL_TIM_Base_Start_IT(&htim4);
     error_handler(status);
 }
 
 void Metronome::stop() {
-    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_4);
+    HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     HAL_TIM_Base_Stop_IT(&htim4);
 }
 
@@ -114,7 +114,7 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
     sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // dedicated prescaler allows to “slow down” the frequency of the input signal
     sConfigIC.ICFilter = 0;                 // filter used to “debounce” the input signal
-    status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4);
+    status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
     if (status != HAL_OK)
         error_handler(status);
 }
@@ -203,7 +203,7 @@ void Metronome::handleInputCaptureCallback()
     __HAL_TIM_SetCounter(&htim2, 0); // reset after each input capture
     __HAL_TIM_SetCounter(&htim4, 0); // reset after each input capture
     __HAL_TIM_ENABLE(&htim4);        // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
-    uint32_t inputCapture = __HAL_TIM_GetCompare(&htim2, TIM_CHANNEL_4);
+    uint32_t inputCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
     this->setPulseFrequency(inputCapture / PPQN);
     this->pulse = 0;
     this->handleOverflowCallback();
@@ -215,14 +215,14 @@ void Metronome::handleInputCaptureCallback()
 void Metronome::enableInputCaptureISR()
 {
     externalInputMode = true;
-    // HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
+    // HAL_TIM_IC_Start_IT(&htim2, captureChannel);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 void Metronome::disableInputCaptureISR()
 {
     externalInputMode = false;
-    // HAL_TIM_IC_Stop(&htim2, TIM_CHANNEL_4);
+    // HAL_TIM_IC_Stop(&htim2, captureChannel);
     __HAL_TIM_ENABLE(&htim4); // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
     HAL_NVIC_DisableIRQ(TIM2_IRQn);
 }
@@ -274,7 +274,7 @@ void Metronome::handleTransportInterruptPPQN()
 void Metronome::enableExternalPulseMode(bool enable) {
     externalPulseMode = enable;
     if (enable == true) {
-        HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_4);
+        HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
         HAL_TIM_Base_Stop_IT(&htim4);
         extPulseInput.rise(callback(this, &Metronome::handleTransportInterruptPPQN));
         extResetInput.rise(callback(this, &Metronome::reset));

@@ -35,6 +35,7 @@ public:
     bool externalInputMode;
     bool externalPulseMode;  // when true, the metronome will use an external input signal to advance the clock by 1 PPQN
 
+    int captureChannel;      // the timer channel to use for input capture (ex. TIM_CHANNEL_2)
     InterruptIn extPulseInput;
     InterruptIn extResetInput;
 
@@ -48,12 +49,15 @@ public:
     Callback<void()> overflowCallback; // callback executes when a full step completes
 
     /**
-     * TODO: initial inputCapture value should be the product of TIM1 and TIM2 prescaler values combined with 120 BPM
-     * so that the sequencer always gets initialized at 120 bpm, no matter the speed of the timers
+     * @brief Construct a new Metronome object
+     * @param _captureChannel the timer channel to use for input capture (ex. TIM_CHANNEL_2)
+     * @param pulse_pin the pin to use for transport pulse input
+     * @param reset_pin the pin to use for transport reset input
      */
-    Metronome(PinName pulse_pin = NC, PinName reset_pin = NC) : extPulseInput(pulse_pin), extResetInput(reset_pin)
+    Metronome(int _captureChannel, PinName pulse_pin = NC, PinName reset_pin = NC) : extPulseInput(pulse_pin), extResetInput(reset_pin)
     {
         instance = this;
+        captureChannel = _captureChannel;
         ticksPerStep = 11129;
         ticksPerPulse = ticksPerStep / PPQN;
         stepsPerBar = 4;
