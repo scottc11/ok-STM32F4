@@ -81,6 +81,7 @@ uint8_t MCP23017::getConfig() {
 /**
  * @brief Controls the direction of the data I/O.
  * When a bit is set, the corresponding pin becomes an input. When a bit is clear, the corresponding pin becomes an output.
+ * 1 = input, 0 = output
 */
 void MCP23017::setDirection(char _port, char _value) {
 	i2cSend(REG_IODIR + _port, _value);
@@ -140,6 +141,12 @@ void MCP23017::digitalWrite(char port, int pin, bool set)
 		value &= ~(1 << pin);
 	}
 	i2cSend(REG_GPIO + port, value);
+}
+
+void MCP23017::digitalToggle(char _port, char _pin) {
+	char value = i2cRead(REG_GPIO + _port);
+	value ^= (1 << _pin);
+	i2cSend(REG_GPIO + _port, value);
 }
 
 
