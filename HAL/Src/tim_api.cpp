@@ -151,8 +151,8 @@ __weak void OK_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
  */
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    Metronome::RouteOverflowCallback(htim);          // TIM2 and TIM4 are used for Metro
-    HardwareTimer::RoutePeriodElapsedCallback(htim); // generic timers
+    // Metronome::RouteOverflowCallback(htim);          // TIM2 and TIM4 are used for Metro
+    // HardwareTimer::RoutePeriodElapsedCallback(htim); // generic timers
     OK_TIM_PeriodElapsedCallback(htim);              // to be defined in user application
     if (htim->Instance == TIM5)                      // TIM5 is being used for HAL ticker ie. for all HAL Peripherals...
     {
@@ -165,55 +165,55 @@ extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  */
 extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-    Metronome::RouteCaptureCallback(htim);
-    HardwareTimer::RouteCaptureCallback(htim);
+    // Metronome::RouteCaptureCallback(htim);
+    // HardwareTimer::RouteCaptureCallback(htim);
     OK_TIM_IC_CaptureCallback(htim);
 }
 
-extern "C" void TIM2_IRQHandler(void)
-{
-    Metronome::RouteTimerGlobalInterrupt(TIM2);
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM2);
-}
+// extern "C" void TIM2_IRQHandler(void)
+// {
+//     Metronome::RouteTimerGlobalInterrupt(TIM2);
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM2);
+// }
 
-extern "C" void TIM3_IRQHandler(void)
-{
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM3);
-}
+// extern "C" void TIM3_IRQHandler(void)
+// {
+//     // HardwareTimer::RouteTimerGlobalInterrupt(TIM3);
+// }
 
-extern "C" void TIM4_IRQHandler(void)
-{
-    Metronome::RouteTimerGlobalInterrupt(TIM4);
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM4);
-}
+// extern "C" void TIM4_IRQHandler(void)
+// {
+//     Metronome::RouteTimerGlobalInterrupt(TIM4);
+//     // HardwareTimer::RouteTimerGlobalInterrupt(TIM4);
+// }
 
 // extern "C" void TIM5_IRQHandler(void) // defined in stm32f4xx_it.h
 // {
 //     HAL_TIM_IRQHandler(&htim5);
 // }
 
-/**
- * @brief This function handles TIM6 global interrupt.
- */
-extern "C" void TIM6_DAC_IRQHandler(void) {
-    // HAL_TIM_IRQHandler(&htim6);
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM6);
-}
+// /**
+//  * @brief This function handles TIM6 global interrupt.
+//  */
+// extern "C" void TIM6_DAC_IRQHandler(void) {
+//     // HAL_TIM_IRQHandler(&htim6);
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM6);
+// }
 
-extern "C" void TIM7_IRQHandler(void) {
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM7);
-}
+// extern "C" void TIM7_IRQHandler(void) {
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM7);
+// }
 
-extern "C" void TIM1_BRK_TIM9_IRQHandler(void)
-{
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM9);
-}
+// extern "C" void TIM1_BRK_TIM9_IRQHandler(void)
+// {
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM9);
+// }
 
-extern "C" void TIM1_UP_TIM10_IRQHandler(void) {
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM10);
-}
+// extern "C" void TIM1_UP_TIM10_IRQHandler(void) {
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM10);
+// }
 
-extern "C" void TIM1_TRG_COM_TIM11_IRQHandler(void) {
-    HardwareTimer::RouteTimerGlobalInterrupt(TIM11);
+// extern "C" void TIM1_TRG_COM_TIM11_IRQHandler(void) {
+//     HardwareTimer::RouteTimerGlobalInterrupt(TIM11);
 
-}
+// }

@@ -1,11 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "Metronome.h"
-#include "HardwareTimer.h"
-
-class Metronome; // forward declaration
-class HardwareTimer; // forward declaration
 
 /*
 Advanced control:
