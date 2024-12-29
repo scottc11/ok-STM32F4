@@ -76,7 +76,7 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
 {
     __HAL_RCC_TIM2_CLK_ENABLE(); // turn on timer clock
 
-    gpio_config_input_capture(EXT_CLOCK_INPUT, TIM_2); // config PA3 in input capture mode
+    gpio_config_input_capture(capturePin, TIM_2);
 
     /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);

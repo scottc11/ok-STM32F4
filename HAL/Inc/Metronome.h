@@ -14,10 +14,6 @@
 #define PPQN_8th (PPQN / 2)
 #define PPQN_16th (PPQN / 4)
 
-#ifndef EXT_CLOCK_INPUT
-#define EXT_CLOCK_INPUT PA_3
-#endif
-
 #define MAX_TICKS_PER_PULSE 34299 // (40 BPM)  MAX TIM4 tickers per pulse
 #define MIN_TICKS_PER_PULSE 5716  // (240 BPM) MIN TIM4 tickers per pulse
 
@@ -35,6 +31,7 @@ public:
     bool externalInputMode;
     bool externalPulseMode;  // when true, the metronome will use an external input signal to advance the clock by 1 PPQN
 
+    PinName capturePin;      // the pin to use for input capture (ex. PA_3)
     int captureChannel;      // the timer channel to use for input capture (ex. TIM_CHANNEL_2)
     InterruptIn extPulseInput;
     InterruptIn extResetInput;
@@ -50,13 +47,15 @@ public:
 
     /**
      * @brief Construct a new Metronome object
+     * @param _capturePin the pin to use for input capture (ex. PA_3)
      * @param _captureChannel the timer channel to use for input capture (ex. TIM_CHANNEL_2)
      * @param pulse_pin the pin to use for transport pulse input
      * @param reset_pin the pin to use for transport reset input
      */
-    Metronome(int _captureChannel, PinName pulse_pin = NC, PinName reset_pin = NC) : extPulseInput(pulse_pin), extResetInput(reset_pin)
+    Metronome(PinName _capturePin, int _captureChannel, PinName pulse_pin = NC, PinName reset_pin = NC) : extPulseInput(pulse_pin), extResetInput(reset_pin)
     {
         instance = this;
+        capturePin = _capturePin;
         captureChannel = _captureChannel;
         ticksPerStep = 11129;
         ticksPerPulse = ticksPerStep / PPQN;
