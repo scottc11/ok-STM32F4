@@ -68,6 +68,7 @@ public:
     void start();
     void stop();
     void reset();
+    void setBPM(float bpm);
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();
     void handleStep();

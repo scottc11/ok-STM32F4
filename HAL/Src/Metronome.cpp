@@ -8,7 +8,7 @@ Metronome *Metronome::instance = NULL;
 void Metronome::init()
 {
     this->initTIM2(40, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
-    this->initTIM4(40, 10000 - 1);
+    this->initTIM4(100, 10000 - 1);
 }
 
 void Metronome::start()
@@ -41,6 +41,27 @@ void Metronome::reset()
     }
     if (resetCallback)
         resetCallback(pulse);
+}
+
+/**
+ * @brief Set the BPM of the metronome
+ * This internally calculates the ticks per beat based on the BPM and PPQN and 
+ * sets the TIM4 period to the calculated value
+ * @param bpm 
+ */
+void Metronome::setBPM(float bpm)
+{
+    
+    uint32_t timerClockFrequency = tim_get_APBx_freq(&htim4);    // Get the timer clock bus frequency
+    uint32_t prescaler = 100;                                    // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
+    uint32_t counterFrequency = timerClockFrequency / (prescaler + 1); // Calculate the counter frequency
+
+    // Calculate the ticks per beat
+    uint32_t ticksPerBeat = counterFrequency / (bpm * PPQN / 60);
+
+    // Configure the timer period
+    __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
+    __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
 }
 
 void Metronome::setStepsPerBar(int steps)
@@ -119,6 +140,11 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
         error_handler(status);
 }
 
+/**
+ * @brief initialize TIM4 as a master to TIM2
+ * @param prescaler setting to 1 should be best
+ * @param period setting to 65535 should be best
+ */
 void Metronome::initTIM4(uint16_t prescaler, uint16_t period)
 {
     __HAL_RCC_TIM4_CLK_ENABLE();
