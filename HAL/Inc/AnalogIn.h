@@ -85,7 +85,7 @@ public:
 
     static uint16_t DMA_BUFFER[ADC_DMA_BUFF_SIZE];
     static AnalogIn *ADC_INSTANCES[ADC_DMA_BUFF_SIZE];
-    static int num_adc_instances;
+    static int NUM_ADC_INSTANCES; // how many AnalogIn instances are being insantiated (prior to )
     static SemaphoreHandle_t semaphore;
 
 private:

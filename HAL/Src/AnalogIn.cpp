@@ -17,12 +17,12 @@ TIM_HandleTypeDef htim8;
 SemaphoreHandle_t AnalogIn::semaphore;
 AnalogIn *AnalogIn::ADC_INSTANCES[ADC_DMA_BUFF_SIZE] = {0};
 uint16_t AnalogIn::DMA_BUFFER[ADC_DMA_BUFF_SIZE] = {0};
-int AnalogIn::num_adc_instances = 0;
+int AnalogIn::NUM_ADC_INSTANCES = 0;
 
 AnalogIn::AnalogIn(PinName _pin)
 {
     pin = _pin;
-    num_adc_instances++;
+    NUM_ADC_INSTANCES++;
     // Add constructed instance to the static list of instances (required for IRQ routing)
     for (int i = 0; i < ADC_DMA_BUFF_SIZE; i++)
     {
@@ -262,7 +262,7 @@ void AnalogIn::initialize(uint16_t sample_rate)
 
     
     // initalize ADC1 and pins
-    for (int i = 0; i < num_adc_instances; i++) // note: using static member prevents initializing unwanted pins
+    for (int i = 0; i < NUM_ADC_INSTANCES; i++) // note: using static member prevents initializing unwanted pins
     {
         if (ADC_INSTANCES[i] != NULL) {
             enable_adc_pin(ADC_INSTANCES[i]->pin);
@@ -295,14 +295,14 @@ void AnalogIn::initialize(uint16_t sample_rate)
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
     hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T8_TRGO;
     hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.NbrOfConversion = ADC_DMA_BUFF_SIZE; // suspicious... should this be ADC_DMA_BUFF_SIZE?
+    hadc1.Init.NbrOfConversion = NUM_ADC_INSTANCES; // number of ADC conversions that will be performed in a sequence. Each conversion corresponds to a different channel if multiple channels are configured.
     hadc1.Init.DMAContinuousRequests = ENABLE;
     hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
     HAL_ADC_Init(&hadc1);
 
     // Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
     ADC_ChannelConfTypeDef sConfig = {0};
-    for (int i = 0; i < num_adc_instances; i++)
+    for (int i = 0; i < NUM_ADC_INSTANCES; i++)
     {
         // get alternate function
         uint32_t channel;
@@ -317,11 +317,11 @@ void AnalogIn::initialize(uint16_t sample_rate)
         
         sConfig.Channel = channel;
         sConfig.Rank = ADC_INSTANCES[i]->index + 1;
-        sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+        sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES; // duration for which the ADC samples the input signal before converting it
         HAL_ADC_ConfigChannel(&hadc1, &sConfig);
     }
 
-    // initialize TIM3
+    // initialize timer
     __HAL_RCC_TIM8_CLK_ENABLE();
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -349,7 +349,7 @@ void AnalogIn::initialize(uint16_t sample_rate)
     HAL_TIM_Base_Start(&htim8);
     
     // start ADC in DMA mode
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogIn::DMA_BUFFER, ADC_DMA_BUFF_SIZE);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)AnalogIn::DMA_BUFFER, NUM_ADC_INSTANCES);
 }
 
 void AnalogIn::setSampleRate(uint32_t sample_rate_hz)
