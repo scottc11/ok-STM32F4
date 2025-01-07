@@ -79,7 +79,7 @@ public:
     void attachSamplingProgressCallback(Callback<void(uint16_t progress)> func);
     void detachSamplingProgressCallback();
 
-    static void initialize(uint16_t sample_rate);
+    static void initialize(uint32_t sample_rate);
     static void setSampleRate(uint32_t sample_rate_hz);
     static void RouteConversionCompleteCallback();
 
