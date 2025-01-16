@@ -257,7 +257,7 @@ void AnalogIn::initialize(uint32_t sample_rate)
     // initialize DMA
     __HAL_RCC_DMA2_CLK_ENABLE(); /* DMA controller clock enable */
     
-    HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0); /* DMA2_Stream0_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, RTOS_ISR_DEFAULT_PRIORITY + 2, 0); /* DMA2_Stream0_IRQn interrupt configuration */
     HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn); /* DMA interrupt init */
 
     
