@@ -16,20 +16,25 @@ public:
     Callback<void()> riseCallback;
     Callback<void()> fallCallback;
 
-    InterruptIn(PinName pin)
+    InterruptIn(PinName pin, PinMode mode = PullNone)
     {
         _pin = pin;
-        _pull = PullNone; // default
-        init();
-    }
-
-    InterruptIn(PinName pin, PinMode mode) {
-        _pin = pin;
         _pull = mode;
-        init();
+
+        if (_pin != NC)
+        {
+            for (int i = 0; i < NUM_GPIO_IRQ_INSTANCES; i++)
+            {
+                if (_instances[i] == NULL)
+                {
+                    _instances[i] = this;
+                    break;
+                }
+            }
+        }
     }
 
-    void init();
+    static void initialize();
     int read();
     void handleInterupt();
     void mode(PinMode mode);

@@ -2,19 +2,10 @@
 
 InterruptIn *InterruptIn::_instances[NUM_GPIO_IRQ_INSTANCES] = {0};
 
-void InterruptIn::init() {
-    if (_pin == NC) {
-        return;
-    }
-    gpio_irq_init(_pin);
-
-    // push new instance onto static instances array
-    for (int i = 0; i < NUM_GPIO_IRQ_INSTANCES; i++)
-    {
-        if (_instances[i] == NULL)
-        {
-            _instances[i] = this;
-            break;
+void InterruptIn::initialize() {
+    for (int i = 0; i < NUM_GPIO_IRQ_INSTANCES; i++) {
+        if (_instances[i] != NULL) {
+            _instances[i]->gpio_irq_init(_instances[i]->_pin);
         }
     }
 }

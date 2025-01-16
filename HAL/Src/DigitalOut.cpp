@@ -1,5 +1,7 @@
 #include "DigitalOut.h"
 
+DigitalOut *DigitalOut::_instances[NUM_GPIO_INSTANCES] = {0};
+
 /** A shorthand for write()
      * \sa DigitalOut::write()
      * @code
@@ -14,6 +16,14 @@ DigitalOut &DigitalOut::operator= (int value)
     return *this;
 }
 
+void DigitalOut::initialize() {
+    for (int i = 0; i < NUM_GPIO_INSTANCES; i++) {
+        if (_instances[i] != NULL) {
+            _instances[i]->gpio_init(_instances[i]->_pin, _instances[i]->initState);
+        }
+    }
+}
+
 void DigitalOut::gpio_init(PinName pin, int value)
 {
     if (pin == PinName::NC)
@@ -23,15 +33,16 @@ void DigitalOut::gpio_init(PinName pin, int value)
     
     // enable gpio clock
     _port = gpio_enable_clock(pin);
-    _pin = gpio_pin_map[STM_PIN(pin)];
+
+    _pin_num = gpio_get_pin(pin);
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(_port, _pin, (GPIO_PinState)value);
+    HAL_GPIO_WritePin(_port, _pin_num, (GPIO_PinState)value);
 
     /*Configure GPIO pin : PA1 */
-    GPIO_InitStruct.Pin = _pin;
+    GPIO_InitStruct.Pin = _pin_num;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -40,14 +51,14 @@ void DigitalOut::gpio_init(PinName pin, int value)
 
 void DigitalOut::write(int value) {
     if (value) {
-        HAL_GPIO_WritePin(_port, _pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_SET);
     } else {
-        HAL_GPIO_WritePin(_port, _pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_RESET);
     }
 }
 
 int DigitalOut::read() {
-    return HAL_GPIO_ReadPin(_port, _pin);
+    return HAL_GPIO_ReadPin(_port, _pin_num);
 }
 
 void DigitalOut::toggle() {

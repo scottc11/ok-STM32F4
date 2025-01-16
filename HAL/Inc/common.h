@@ -25,6 +25,7 @@
 #define RTOS_ISR_DEFAULT_PRIORITY 6
 
 #define NUM_GPIO_IRQ_INSTANCES 16
+#define NUM_GPIO_INSTANCES 32  // not a hardware limit, just a sanity check
 
 /* Base address of the Flash sectors Bank 1 */
 #define ADDR_FLASH_SECTOR_0 ((uint32_t)0x08000000) /* Base @ of Sector 0, 16 Kbytes */
