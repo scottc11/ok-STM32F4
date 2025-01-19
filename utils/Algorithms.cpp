@@ -40,6 +40,31 @@ float getClosestFloat(float val1, float val2, float target)
 }
 
 /**
+ * @brief Exponential mapping of an input value to an output value
+ * @param input input value
+ * @param maxInput maximum input value
+ * @param maxOutput maximum output value
+ * @param growthRate growth rate of the exponential function (adjust for steepness)
+ * @return mapped output value
+ */
+uint16_t exponential_mapping(uint16_t input, uint16_t maxInput, uint16_t maxOutput, float growthRate /*5.0*/)
+{
+    const uint16_t x_max = maxInput;  // Maximum input value
+    const uint16_t y_max = maxOutput; // Maximum output value
+    const double k = growthRate;      // Growth rate (adjust for steepness)
+
+    // Normalize x to [0, 1]
+    double normalized_x = (double)input / x_max;
+
+    // Apply the exponential formula
+    double result = y_max * (1 - exp(-k * normalized_x));
+
+    // Ensure result fits in uint16_t range
+    return (uint16_t)result;
+}
+
+
+/**
  * Linearly interpolates the y value for a given x value based on the given data points.
  * 
  * @param targetX the x value for which we want to find the y value
