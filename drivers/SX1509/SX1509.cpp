@@ -4,7 +4,7 @@
 void SX1509::init(bool extClock /*false*/) {
 
   this->reset();
-  this->setClockConfig(ClockSource::INTERNAL, OSCIO::OUTPUT, fOSCOUT::DIVISION_OF_REG_CLOCK);
+  this->setClockConfig(ClockSource::INTERNAL, OSCIO::INPUT, fOSCOUT::DIVISION_OF_REG_CLOCK);
   this->setMiscConfig(DriverMode::LINEAR, ClockSpeed::EXTRA_SLOW);
   this->setDebounceTime(3); // configure a common debounce time
 }
