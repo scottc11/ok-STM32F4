@@ -7,8 +7,8 @@ Metronome *Metronome::instance = NULL;
 
 void Metronome::init()
 {
-    this->initTIM2(40, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
-    this->initTIM4(100, 10000 - 1);
+    this->initTIM2(160, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
+    this->initTIM4(160, 10000 - 1);
 }
 
 void Metronome::start()
