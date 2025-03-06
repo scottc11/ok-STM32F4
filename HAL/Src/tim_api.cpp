@@ -67,6 +67,50 @@ void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, ui
 }
 
 /**
+ * @brief Get the amount of rising/falling edges to count before triggering the input capture interrupt
+ *
+ * @param htim
+ * @param channel
+ * 
+ * @return uint8_t how many events before the capture is performed
+ */
+uint8_t tim_get_capture_prescaler(TIM_HandleTypeDef *htim, uint32_t channel)
+{
+    uint32_t prescaler = __HAL_TIM_GetICPrescaler(htim, channel);
+    switch (prescaler)
+    {
+    case TIM_ICPSC_DIV1:
+        return 1;
+    case TIM_ICPSC_DIV2:
+        return 2;
+    case TIM_ICPSC_DIV4:
+        return 4;
+    case TIM_ICPSC_DIV8:
+        return 8;
+    default:
+        return 1;
+    }
+}
+
+/**
+ * @brief Calculate the frequency of the input signal
+ * 
+ * @param htim
+ * @param channel
+ * @param captureValues
+ * @param captureCount
+ */
+float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel)
+{
+    uint32_t capturePrescaler = tim_get_capture_prescaler(htim, channel);
+    uint16_t prescaler = htim->Init.Prescaler;
+    uint32_t APBx_freq = tim_get_APBx_freq(htim);
+    uint32_t capture = __HAL_TIM_GetCompare(htim, channel) / capturePrescaler;
+    float frequency = static_cast<float>(APBx_freq) / (float)((capture * (prescaler + 1)));
+    return frequency;
+}
+
+/**
  * @brief
  * 1) Enables the TIM peripheral clock
  * 2) Sets the priority of the interrupt associated with the TIM peripheral

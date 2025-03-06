@@ -20,6 +20,10 @@ uint32_t tim_get_overflow_freq(TIM_HandleTypeDef *htim);
 
 void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, uint32_t maxTimerResolution);
 
+uint8_t tim_get_capture_prescaler(TIM_HandleTypeDef *htim, uint32_t channel);
+
+float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel);
+
 void tim_enable(TIM_TypeDef *instance);
 
 void OK_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
