@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include <algorithm>
+#include <memory>
 
 int invertIntInRange(int min, int max, int num);
 
@@ -15,6 +17,8 @@ uint16_t exponential_mapping(uint16_t input, uint16_t maxInput, uint16_t maxOutp
 
 uint32_t linear_interpolation(uint32_t targetX, uint32_t x[], uint32_t y[], int num_plots);
 float linear_interpolation_f(float targetX, float x[], float y[], int num_plots);
+
+void ok_remove_outliers(float *data, size_t size, float *filteredData, size_t &filteredSize);
 
 // float findClosestValue(float array[], int size, float target);
 

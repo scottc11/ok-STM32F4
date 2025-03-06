@@ -160,3 +160,48 @@ float linear_interpolation_f(float targetX, float x[], float y[], int num_plots)
 
 //     return closestValue;
 // }
+
+/**
+ * @brief Remove outliers from a list of data (based on the "Interquartile Range (IQR) Method")
+ *
+ * @param data
+ * @param size
+ * @param filteredData
+ * @param filteredSize
+ */
+void ok_remove_outliers(float *data, size_t size, float *filteredData, size_t &filteredSize)
+{
+    // Allocate memory manually using malloc
+    float *sortedData = (float *)malloc(size * sizeof(float));
+    if (sortedData == nullptr)
+    {
+        // Handle memory allocation failure
+        filteredSize = 0;
+        return;
+    }
+
+    std::copy(data, data + size, sortedData);
+    std::sort(sortedData, sortedData + size);
+
+    // Calculate Q1 and Q3
+    float Q1 = sortedData[size / 4];
+    float Q3 = sortedData[3 * size / 4];
+    float IQR = Q3 - Q1;
+
+    // Calculate bounds for outliers
+    float lowerBound = Q1 - 1.5f * IQR;
+    float upperBound = Q3 + 1.5f * IQR;
+
+    // Filter the data
+    filteredSize = 0;
+    for (size_t i = 0; i < size; ++i)
+    {
+        if (data[i] >= lowerBound && data[i] <= upperBound)
+        {
+            filteredData[filteredSize++] = data[i];
+        }
+    }
+
+    // Free the allocated memory
+    free(sortedData);
+}
