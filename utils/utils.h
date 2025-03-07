@@ -20,6 +20,36 @@ constexpr T ok_clamp(T x, T min, T max)
     return x < min ? min : (x > max ? max : x);
 }
 
+/**
+ * @brief map a number from one range to another
+ *
+ * @param input
+ * @param minInput
+ * @param maxInput
+ * @param minOutput
+ * @param maxOutput
+ * @return T
+ */
+template <class T>
+T ok_map(T input, T minInput, T maxInput, T minOutput, T maxOutput)
+{
+    return ((maxOutput - minOutput) * (input - minInput)) / (maxInput - minInput) + minOutput;
+}
+
+/**
+ * @brief invert a number
+ *
+ * @param input number to invert
+ * @param min input range min
+ * @param max input range max
+ * @return T
+ */
+template <class T>
+T ok_invert(T input, T min, T max)
+{
+    return max - (input - min);
+}
+
 template <typename T>
 T ok_arr_average(T arr[], int n)
 {
