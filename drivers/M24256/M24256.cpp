@@ -56,3 +56,51 @@ void M24256::setWriteControl(bool state)
 {
     writeControlPin.write(state);
 }
+
+/**
+ * @brief Mass erase the entire EEPROM by writing 0xFF to all memory locations
+ * 
+ * This function writes 0xFF to all memory locations in the EEPROM.
+ * It uses the page write capability to optimize the process.
+ * 
+ * @return HAL_StatusTypeDef Status of the operation
+ */
+HAL_StatusTypeDef M24256::massErase()
+{
+    // Make sure write control is enabled
+    setWriteControl(false);
+    
+    // Create a buffer of 0xFF for page writing
+    uint8_t eraseBuffer[M24256_PAGE_SIZE];
+    for (int i = 0; i < M24256_PAGE_SIZE; i++) {
+        eraseBuffer[i] = 0xFF;
+    }
+    
+    // Write 0xFF to all pages
+    for (uint16_t pageAddr = 0; pageAddr < M24256_TOTAL_SIZE; pageAddr += M24256_PAGE_SIZE)
+    {
+        // Prepare the address bytes
+        uint8_t addrBuffer[2];
+        addrBuffer[0] = (uint8_t)(pageAddr >> 8);   // MSB of memory address
+        addrBuffer[1] = (uint8_t)(pageAddr & 0xFF); // LSB of memory address
+        
+        // Write the address
+        HAL_StatusTypeDef status = i2c->write(address, addrBuffer, 2);
+        if (status != HAL_OK)
+        {
+            return status;
+        }
+        
+        // Write the page of 0xFF
+        status = i2c->write(address, eraseBuffer, M24256_PAGE_SIZE);
+        if (status != HAL_OK)
+        {
+            return status;
+        }
+        
+        // Wait for write cycle to complete (tW)
+        HAL_Delay(M24256_WRITE_CYCLE_TIME_MS);
+    }
+    
+    return HAL_OK;
+}

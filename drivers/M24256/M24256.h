@@ -4,10 +4,13 @@
 #include "I2C.h"
 #include "DigitalOut.h"
 
+// https://www.st.com/resource/en/datasheet/m24256-br.pdf
+
 // Device-specific constants
 #define M24256_I2C_ADDRESS_BASE 0xA0 // 8-bit base address
 #define M24256_PAGE_SIZE 64           // Page size in bytes
 #define M24256_WRITE_CYCLE_TIME_MS 5   // Max write cycle time
+#define M24256_TOTAL_SIZE 32768        // Total size in bytes (32KB)
 
 class M24256
 {
@@ -28,4 +31,6 @@ public:
     uint8_t readByte(uint16_t memAddress);
     // void writePage(uint16_t address, uint8_t *data, uint8_t length);
     void setWriteControl(bool state);
+    
+    HAL_StatusTypeDef massErase();
 };
