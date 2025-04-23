@@ -22,7 +22,7 @@
 /**
  * @brief Software timers are used to schedule the execution of a function at a set time in the future,
  * or periodically with a fixed frequency. The function executed by the software timer is called the
- * software timer’s callback function.
+ * software timer's callback function.
  *
  * @note Software timers do not use any processing time unless a software timer callback function is actually executing.
  *
@@ -35,12 +35,14 @@ public:
     void start(TickType_t delay = 0);
     void stop(TickType_t delay = 0);
     void reset(TickType_t delay = 0);
+    bool isRunning();
     
     TickType_t getPeriod();
     void setPeriod(TickType_t period, bool useMilliseconds=false);
 
     void attachCallback(Callback<void()> func, TickType_t period, bool repeated);
     void detachCallback();
+    
 
 private:
     TimerHandle_t handle;

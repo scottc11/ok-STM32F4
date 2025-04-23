@@ -43,6 +43,19 @@ void SoftwareTimer::reset(TickType_t delay /*= 0*/)
     xTimerReset(handle, delay);
 }
 
+/**
+ * @brief Check if the timer is currently running
+ * @return true if the timer is active, false if it is dormant
+ */
+bool SoftwareTimer::isRunning()
+{
+    return xTimerIsTimerActive(handle) == pdTRUE;
+}
+
+/**
+ * @brief Get the period of the timer
+ * @return the period of the timer in ticks
+ */
 TickType_t SoftwareTimer::getPeriod()
 {
     return xTimerGetPeriod(handle);
