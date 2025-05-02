@@ -24,6 +24,8 @@ uint8_t tim_get_capture_prescaler(TIM_HandleTypeDef *htim, uint32_t channel);
 
 float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel);
 
+uint32_t tim_get_capture_period(TIM_HandleTypeDef *htim, uint32_t current, uint32_t previous);
+
 void tim_enable(TIM_TypeDef *instance);
 
 void OK_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);

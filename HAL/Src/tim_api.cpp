@@ -111,6 +111,28 @@ float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel)
 }
 
 /**
+ * @brief Calculate the period between two capture readings, handling the overflow case
+ * 
+ * @param htim pointer to the timer handle
+ * @param current current capture value
+ * @param previous previous capture value
+ * @return uint32_t period
+ */
+uint32_t tim_get_capture_period(TIM_HandleTypeDef *htim, uint32_t current, uint32_t previous)
+{
+    // If no overflow occurred
+    if (current >= previous)
+    {
+        return current - previous;
+    }
+    // If overflow occurred
+    else
+    {
+        return (htim->Instance->ARR - previous) + current + 1;
+    }
+}
+
+/**
  * @brief
  * 1) Enables the TIM peripheral clock
  * 2) Sets the priority of the interrupt associated with the TIM peripheral

@@ -133,8 +133,8 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // dedicated prescaler allows to “slow down” the frequency of the input signal
-    sConfigIC.ICFilter = 0;                 // filter used to “debounce” the input signal
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // dedicated prescaler allows to "slow down" the frequency of the input signal
+    sConfigIC.ICFilter = 0;                 // filter used to "debounce" the input signal
     status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
     if (status != HAL_OK)
         error_handler(status);
@@ -226,10 +226,29 @@ void Metronome::handleInputCaptureCallback()
         }
     }
 
-    __HAL_TIM_SetCounter(&htim2, 0); // reset after each input capture
-    __HAL_TIM_SetCounter(&htim4, 0); // reset after each input capture
-    __HAL_TIM_ENABLE(&htim4);        // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
-    uint32_t inputCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
+    // Get the current capture value
+    uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
+    
+    // Store the previous capture value for future use
+    static uint32_t previousCapture = 0;
+    
+    // Calculate period between captures, handling potential overflow
+    uint32_t inputCapture;
+    if (previousCapture == 0) {
+        // First valid capture after reset
+        inputCapture = currentCapture;
+    } else {
+        // Calculate period between captures
+        inputCapture = tim_get_capture_period(&htim2, currentCapture, previousCapture);
+    }
+    
+    // Update previous capture for next calculation
+    previousCapture = currentCapture;
+    
+    // Reset only the TIM4 counter, keep TIM2 running
+    __HAL_TIM_SetCounter(&htim4, 0);
+    __HAL_TIM_ENABLE(&htim4);     // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
+    
     this->setPulseFrequency(inputCapture / PPQN);
     this->pulse = 0;
     this->handleOverflowCallback();
