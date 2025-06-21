@@ -50,10 +50,13 @@ void DigitalOut::gpio_init(PinName pin, int value)
 }
 
 void DigitalOut::write(int value) {
-    if (value) {
-        HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_SET);
-    } else {
-        HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_RESET);
+    if (_pin != NC) {
+        if (value) {
+            HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_SET);
+        }
+        else {
+            HAL_GPIO_WritePin(_port, _pin_num, GPIO_PIN_RESET);
+        }
     }
 }
 
