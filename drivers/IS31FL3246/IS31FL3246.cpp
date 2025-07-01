@@ -6,8 +6,10 @@ void IS31FL3246::init()
     reset();
     setControlRegister(false, false, PWM_Frequency::_128kHz, false);
     setGlobalCurrent(255, 255, 255); // max current
-    for (int i = 1; i <= 36; i++)
+    for (int i = 0; i < IS31FL3246_CHANNEL_COUNT - 1; i++)
     {
+        pwmFrame1[i] = 0;
+        pwmFrame2[i] = 0;
         setChannelMode(i, 0b00000100);
     }
 }
@@ -69,16 +71,68 @@ void IS31FL3246::setGlobalCurrent(uint8_t red, uint8_t green, uint8_t blue)
  * @param channel number from 1 to 36 corresponding to the LED channel
  *
  */
-void IS31FL3246::setChannelPWM(int channel, uint8_t pwm, bool update /* = true*/)
+void IS31FL3246::setChannelPWM(int channel, uint8_t pwm, uint8_t frame /* 1 */, bool update /* = true*/)
 {
-    uint8_t pwm_reg = 2 * channel - 1;
-    writeRegister(pwm_reg, pwm);
-    if (update)
-    {
-        // When SDB = “H” and SSD = “1”, a write of “0000 0000” to 6Dh is to update the PWM Register (01h~6Ch) values.
-        writeRegister(Registers::UPDATE_REG, 0x00);
+    if (frame == 1) {
+        pwmFrame1[channel] = pwm;
+    } else {
+        pwmFrame2[channel] = pwm;
     }
-    
+
+    if (frame == currentFrame) {
+        uint8_t pwm_reg = 2 * channel - 1;
+        writeRegister(pwm_reg, pwm);
+        if (update)
+        {
+            // When SDB = “H” and SSD = “1”, a write of “0000 0000” to 6Dh is to update the PWM Register (01h~6Ch) values.
+            writeRegister(Registers::UPDATE_REG, 0x00);
+        }
+    }
+}
+
+/**
+ * @brief Set the current frame to be drawn
+ * 
+ * @param frame 
+ */
+void IS31FL3246::setFrame(uint8_t frame)
+{
+    currentFrame = frame;
+}
+
+void IS31FL3246::drawFrame(uint8_t frame)
+{
+    setFrame(frame);
+    if (frame == 1)
+    {
+        for (int i = 0; i < IS31FL3246_CHANNEL_COUNT - 1; i++)
+        {
+            setChannelPWM(i, pwmFrame1[i], frame);
+        }
+    } else
+    {
+        for (int i = 0; i < IS31FL3246_CHANNEL_COUNT - 1; i++)
+        {
+            setChannelPWM(i, pwmFrame2[i], frame);
+        }
+    }
+}
+
+void IS31FL3246::clearFrame(uint8_t frame)
+{
+    if (frame == 1)
+    {
+        for (int i = 0; i < IS31FL3246_CHANNEL_COUNT - 1; i++)
+        {
+            pwmFrame1[i] = 0;
+        }
+    } else
+    {
+        for (int i = 0; i < IS31FL3246_CHANNEL_COUNT - 1; i++)
+        {
+            pwmFrame2[i] = 0;
+        }
+    }
 }
 
 /**

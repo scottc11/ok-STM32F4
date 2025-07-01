@@ -8,6 +8,7 @@
 #define IS31FL3246_ADDR_VCC 0x66 // 8-bit addr
 #define IS31FL3246_ADDR_SCL 0x62 // 8-bit addr
 #define IS31FL3246_ADDR_SDA 0x64 // 8-bit addr
+#define IS31FL3246_CHANNEL_COUNT 36
 
 class IS31FL3246 {
 public:
@@ -28,13 +29,19 @@ public:
     uint8_t address;
     I2C *i2c;
     bool isConnected = false;
+    uint8_t currentFrame = 1;
+    uint8_t pwmFrame1[36];
+    uint8_t pwmFrame2[36];
 
     void init();
     void setControlRegister(bool shutdown, bool bit_mode, uint8_t freq, bool RGB_mode);
     void setGlobalCurrent(uint8_t red, uint8_t green, uint8_t blue);
     void setPhaseDelayAndClockPhase();
-    void setChannelPWM(int channel, uint8_t pwm, bool update=true);
+    void setChannelPWM(int channel, uint8_t pwm, uint8_t frame=1, bool update=true);
     void setChannelMode(int channel, uint8_t mode);
+    void setFrame(uint8_t frame);
+    void drawFrame(uint8_t frame);
+    void clearFrame(uint8_t frame);
     void reset();
 
 
