@@ -84,6 +84,8 @@ public:
         i2c = i2c_ptr;
     }
 
+    InterruptIn irq;
+
     void init(void);
     void poll();
     void enable(void);
@@ -114,10 +116,6 @@ public:
 private:
   char address; // Note: The Arm Mbed API uses 8 bit addresses, so make sure to left-shift 7 bit addresses by 1 bit before passing them.
   I2C *i2c;     // use an #ifdef macro here to determin which underlying framework I2C class should be used
-
-  InterruptIn irq;
-  volatile uint16_t _button;
-  volatile uint32_t _button_has_changed;
 
   volatile bool interrupt{false};
   uint16_t currTouched{0};

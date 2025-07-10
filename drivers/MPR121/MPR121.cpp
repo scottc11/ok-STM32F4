@@ -166,8 +166,6 @@ bool MPR121::connected()
  */
 void MPR121::enable(void)
 {
-    _button = 0;
-    _button_has_changed = 0;
     // enable the 12 electrodes - allow disable to put device into lower current consumption mode
     writeRegister(ECR, 0x8f);
 }
