@@ -105,6 +105,7 @@ public:
     uint16_t getCurrTouched();
     uint16_t getPrevTouched();
     uint8_t getLastTouchedNode();
+    int getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads);
     bool interruptDetected();
     int readInterruptPin();
 

@@ -354,6 +354,28 @@ uint8_t MPR121::getLastTouchedNode()
 }
 
 /**
+ * @brief Get all currently touched pads in the order they were touched
+ *
+ * @param orderedPads Array to store the pad indices in order
+ * @param maxPads Maximum number of pads to return (size of orderedPads array)
+ * @return int Number of pads returned
+ */
+int MPR121::getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads)
+{
+    int count = 0;
+    struct TouchedNode *temp = touchedHead;
+    
+    while (temp != NULL && count < maxPads)
+    {
+        orderedPads[count] = temp->pad;
+        count++;
+        temp = temp->next;
+    }
+    
+    return count;
+}
+
+/**
  * @brief The interrupt handler for the IRQ pin
  * if callback present, executes the callback, else, sets an interrupt flag
  * 
