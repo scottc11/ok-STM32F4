@@ -94,7 +94,7 @@ cat > Makefile << EOF
 ######################################
 # target
 ######################################
-TARGET = $PROJECT_NAME
+TARGET = firmware
 
 FLASH_SIZE = \$\$((256 * 1024)) # 256 kB (Sector 6 and 7 used for config data)
 RAM_SIZE = \$\$((128 * 1024)) # 128 kB
