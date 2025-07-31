@@ -233,6 +233,14 @@ usedRam = $$( $(SZ) $@ | sed -n 2p | awk '{ram=$$2+$$3} {print ram}' )
 usedRamPercent = $$(( 100 * $(usedRam) / $(RAM_SIZE) ))
 ramMessage = Ram Used: $(usedRam)/$(RAM_SIZE) ( $(usedRamPercent) % ) - (static only)
 
+# Extract FreeRTOS heap size from config file - simplified approach
+heapSize = $$( grep 'configTOTAL_HEAP_SIZE' $(LIB_PATH)/system/Inc/FreeRTOSConfig.h | grep -o '[0-9][0-9]*' | tail -1 )
+heapPercent = $$(( 100 * $(heapSize) / $(RAM_SIZE) ))
+heapMessage = FreeRTOS Heap: $(heapSize)/$(RAM_SIZE) ( $(heapPercent) % ) - (dynamic)
+totalRamUsed = $$(( $(usedRam) + $(heapSize) ))
+totalRamPercent = $$(( 100 * $(totalRamUsed) / $(RAM_SIZE) ))
+totalRamMessage = Total RAM Est: $(totalRamUsed)/$(RAM_SIZE) ( $(totalRamPercent) % ) - (static + heap)
+
 #######################################
 # build the application
 #######################################
@@ -274,6 +282,8 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	@echo ""
 	@echo "$(flashMessage)"
 	@echo "$(ramMessage)"
+	@echo "$(heapMessage)"
+	@echo "$(totalRamMessage)"
 	@echo ""
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
