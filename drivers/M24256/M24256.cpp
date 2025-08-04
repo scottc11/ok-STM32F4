@@ -23,6 +23,7 @@ void M24256::writeByte(uint16_t memAddress, uint8_t data)
     buffer[2] = data;                         // data to write
 
     i2c->write(address, buffer, 3);
+    vTaskDelay(pdMS_TO_TICKS(6));
 }
 
 
