@@ -29,7 +29,8 @@ public:
     void init();
     void writeByte(uint16_t memAddress, uint8_t data);
     uint8_t readByte(uint16_t memAddress);
-    // void writePage(uint16_t address, uint8_t *data, uint8_t length);
+    void writePage(uint16_t address, uint8_t *data, uint8_t length);
+    HAL_StatusTypeDef writeBuffer(uint16_t address, const uint8_t *data, uint16_t length);
     void setWriteControl(bool state);
     
     HAL_StatusTypeDef massErase();
