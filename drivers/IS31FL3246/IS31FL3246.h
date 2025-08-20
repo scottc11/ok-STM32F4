@@ -8,6 +8,7 @@
 #define IS31FL3246_ADDR_VCC 0x66 // 8-bit addr
 #define IS31FL3246_ADDR_SCL 0x62 // 8-bit addr
 #define IS31FL3246_ADDR_SDA 0x64 // 8-bit addr
+#define IS31FL3246_CHANNEL_COUNT 36
 
 class IS31FL3246 {
 public:
