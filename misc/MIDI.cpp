@@ -4,12 +4,16 @@ uint8_t MIDI::BUFFER_IN[3] = {0}; // static
 
 void MIDI::sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t data[3] = {0x90 | channel, note, velocity};
+    uint8_t data[3] = {static_cast<uint8_t>(0x90 | channel), note, velocity};
+    // TODO: Implement actual MIDI data transmission
+    (void)data; // Suppress unused variable warning
 };
 
 void MIDI::sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t data[3] = {0x80 | channel, note, velocity};
+    uint8_t data[3] = {static_cast<uint8_t>(0x80 | channel), note, velocity};
+    // TODO: Implement actual MIDI data transmission
+    (void)data; // Suppress unused variable warning
 };
 
 uint8_t MIDI::getChannel(uint8_t status)

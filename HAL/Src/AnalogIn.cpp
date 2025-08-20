@@ -305,7 +305,7 @@ void AnalogIn::initialize(uint32_t sample_rate)
     for (int i = 0; i < NUM_ADC_INSTANCES; i++)
     {
         // get alternate function
-        uint32_t channel;
+        uint32_t channel = ADC_CHANNEL_0;
         for (int y = 0; y < ADC_MAX_INSTANCES; y++)
         {
             if (ADC_INSTANCES[i]->pin == ADC_PIN_MAP[y].pin)
