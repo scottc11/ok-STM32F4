@@ -9,6 +9,7 @@ void Metronome::init()
 {
     this->initTIM2(160, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
     this->initTIM4(160, 10000 - 1);
+    this->pulse = 0;
 }
 
 void Metronome::start()
@@ -28,6 +29,14 @@ void Metronome::stop() {
 
 void Metronome::reset()
 {
+    // there is a timing issue here. Something to do with both the clock in and reset interrupts firing at the same time.
+    // since a reset will wait for the next input capture event, we will need to somehow reset the capture counter? Otherwise if a reset occurs
+    // halfway through a step, the clock will be 8 16th notes out of sync.
+    // the internal prescaler counter doesn't get reset to 0, so it might be partway through counting to the prescaler value when the next actual input pulse arrives.
+    // Reset the input capture prescaler counter by generating a software capture event
+    // __HAL_RCC_TIM2_FORCE_RESET();
+    // __HAL_RCC_TIM2_RELEASE_RESET();
+
     __HAL_TIM_SetCounter(&htim2, 0); // not certain this has to happen, just assuming
     __HAL_TIM_SetCounter(&htim4, 0);
     this->pulse = 0;
@@ -62,6 +71,42 @@ void Metronome::setBPM(float bpm)
     // Configure the timer period
     __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
     __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
+}
+
+
+
+/**
+ * @brief Set the input note division via the TIM2 input capture prescaler
+ * 
+ * @param division 
+ */
+void Metronome::setInputNoteDivision(InputNoteDivision division)
+{
+    inputNoteDivision = division;
+
+    // Stop input capture before reconfiguring
+    HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
+
+    // Reset the prescaler counter to avoid timing artifacts
+    __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, static_cast<uint32_t>(inputNoteDivision));
+
+    // Configure input capture channel with new prescaler
+    TIM_IC_InitTypeDef sConfigIC = {0};
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICFilter = 0;
+
+    sConfigIC.ICPrescaler = static_cast<uint32_t>(inputNoteDivision);
+
+    HAL_StatusTypeDef status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
+    if (status != HAL_OK)
+        error_handler(status);
+
+    // Restart input capture if external input mode is enabled
+    if (externalInputMode)
+    {
+        HAL_TIM_IC_Start_IT(&htim2, captureChannel);
+    }
 }
 
 void Metronome::setStepsPerBar(int steps)

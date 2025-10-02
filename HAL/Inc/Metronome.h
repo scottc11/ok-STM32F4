@@ -16,6 +16,13 @@
 #define MAX_TICKS_PER_PULSE 34299 // (40 BPM)  MAX TIM4 tickers per pulse
 #define MIN_TICKS_PER_PULSE 5716  // (240 BPM) MIN TIM4 tickers per pulse
 
+enum class InputNoteDivision : uint32_t {
+    QUARTER_NOTE = TIM_ICPSC_DIV1,    // capture every edge
+    EIGHTH_NOTE = TIM_ICPSC_DIV2,     // capture every 2nd edge  
+    SIXTEENTH_NOTE = TIM_ICPSC_DIV4, // capture every 4th edge
+    THIRTY_SECOND_NOTE = TIM_ICPSC_DIV8 // capture every 8th edge
+};
+
 extern TIM_HandleTypeDef htim2; // 32-bit timer
 extern TIM_HandleTypeDef htim4; // 16-bit timer
 
@@ -29,6 +36,7 @@ public:
     uint8_t stepsPerBar;    // value represents the number of quarter notes per bar (ie. 3/4, 4/4, 5/4, 6/4, 7/4)
     bool externalInputMode;
     bool externalPulseMode;  // when true, the metronome will use an external input signal to advance the clock by 1 PPQN
+    InputNoteDivision inputNoteDivision;
 
     PinName capturePin;      // the pin to use for input capture (ex. PA_3)
     int captureChannel;      // the timer channel to use for input capture (ex. TIM_CHANNEL_2)
@@ -59,6 +67,7 @@ public:
         ticksPerStep = 11129;
         ticksPerPulse = ticksPerStep / PPQN;
         stepsPerBar = 4;
+        inputNoteDivision = InputNoteDivision::QUARTER_NOTE;
     };
 
     void init();
@@ -69,6 +78,7 @@ public:
     void stop();
     void reset();
     void setBPM(float bpm);
+    void setInputNoteDivision(InputNoteDivision division);
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();
     void handleStep();
