@@ -38,8 +38,6 @@ public:
     void setChannelMode(int channel, uint8_t mode);
     void reset();
 
-
-private:
     void writeRegister(char reg, char _data1, char _data2)
     {
         uint8_t commands[3];
