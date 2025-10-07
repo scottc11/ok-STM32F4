@@ -10,7 +10,15 @@ public:
     enum Instance
     {
         I2C_1 = 1,
+        I2C_2 = 2,
         I2C_3 = 3
+    };
+
+    enum Mode
+    {
+        Blocking = 0,
+        NonBlocking = 1,
+        NonBlockingDMA = 2
     };
 
     enum Frequency
@@ -23,11 +31,13 @@ public:
     PinName _scl_pin;
     I2C_HandleTypeDef _hi2c;
     Instance _instance;
+    Mode _mode;
 
-    I2C(PinName sda, PinName scl, Instance inst) {
+    I2C(PinName sda, PinName scl, Instance inst, Mode mode = Blocking) {
         _sda_pin = sda;
         _scl_pin = scl;
         _instance = inst;
+        _mode = mode;
     };
 
     void init();

@@ -10,8 +10,10 @@ void I2C::init()
     if (_instance == I2C_1) {
         GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
     }
-    if (_instance == I2C_3)
-    {
+    else if (_instance == I2C_2) {
+        GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
+    }
+    else {
         GPIO_InitStruct.Alternate = GPIO_AF4_I2C3;
     }
 
@@ -38,6 +40,10 @@ void I2C::init()
         __HAL_RCC_I2C1_CLK_ENABLE(); /* Peripheral clock enable */
         _hi2c.Instance = I2C1;
         break;
+    case I2C_2:
+        __HAL_RCC_I2C2_CLK_ENABLE();
+        _hi2c.Instance = I2C2;
+        break;
     case I2C_3:
         __HAL_RCC_I2C3_CLK_ENABLE();
         _hi2c.Instance = I2C3;
@@ -57,6 +63,33 @@ void I2C::init()
     if (status != HAL_OK) {
         logger_log_err("I2C->init", status);
     }
+
+    if (_mode == NonBlocking) {
+        switch (_instance)
+        {
+        case I2C_1:
+            HAL_NVIC_SetPriority(I2C1_EV_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+            HAL_NVIC_SetPriority(I2C1_ER_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+            break;
+        case I2C_2:
+            HAL_NVIC_SetPriority(I2C2_EV_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C2_EV_IRQn);
+            HAL_NVIC_SetPriority(I2C2_ER_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C2_ER_IRQn);
+            break;
+        case I2C_3:
+            HAL_NVIC_SetPriority(I2C3_EV_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
+            HAL_NVIC_SetPriority(I2C3_ER_IRQn, RTOS_ISR_DEFAULT_PRIORITY, 0);
+            HAL_NVIC_EnableIRQ(I2C3_ER_IRQn);
+            break;
+        default:
+            break;
+        }
+    }
+
     mutex.unlock();
 }
 
