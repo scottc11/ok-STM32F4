@@ -95,11 +95,16 @@ void I2C::init()
 
 HAL_StatusTypeDef I2C::write(int address, uint8_t *data, int length, bool repeated /*=false*/)
 {
+    // if (_mode == NonBlocking)
+    // {
+    //     return OK_I2C_NON_BLOCKING_TRANSMIT(&_hi2c, (uint16_t)address, data, (uint16_t)length, 50);
+    // }
+
     mutex.lock();
     HAL_StatusTypeDef status;
     while (HAL_I2C_GetState(&_hi2c) != HAL_I2C_STATE_READY)
     {
-        // HAL_Delay(1);
+        vTaskDelay(pdMS_TO_TICKS(3));
     };
 
     status = HAL_I2C_Master_Transmit(&_hi2c, address, data, length, HAL_MAX_DELAY);
@@ -113,12 +118,18 @@ HAL_StatusTypeDef I2C::write(int address, uint8_t *data, int length, bool repeat
 
 int I2C::read(int address, uint8_t *data, int length, bool repeated /*=false*/)
 {
+
+    // if (_mode == NonBlocking)
+    // {
+    //     return OK_I2C_NON_BLOCKING_RECEIVE(&_hi2c, (uint16_t)address, data, (uint16_t)length, 50);
+    // }
+
     mutex.lock();
     HAL_StatusTypeDef status;
     
     while (HAL_I2C_GetState(&_hi2c) != HAL_I2C_STATE_READY)
     {
-        // HAL_Delay(1);
+        vTaskDelay(pdMS_TO_TICKS(3));
     };
 
     status = HAL_I2C_Master_Receive(&_hi2c, address, data, length, HAL_MAX_DELAY);
@@ -135,7 +146,51 @@ I2C_TypeDef *I2C::get_i2c_instance(Instance instance)
     {
         case Instance::I2C_1:
             return I2C1;
+        case Instance::I2C_2:
+            return I2C2;
         case Instance::I2C_3:
             return I2C3;
     }
+}
+
+/**
+ * @brief Handle non-blocking I2C transmit
+ * @note This function should not be modified, when the callback is needed, OK_I2C_NON_BLOCKING_TRANSMIT should be implemented in the user file
+ *
+ * @param hi2c I2C handle
+ * @param address 8-bit device address
+ * @param buf Pointer to the data to transmit
+ * @param len Length of the data to transmit
+ * @param timeout_ms how long to wait for transaction to complete
+ * @return HAL_StatusTypeDef
+ */
+extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_TRANSMIT(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
+{
+    UNUSED(hi2c);
+    UNUSED(address);
+    UNUSED(buf);
+    UNUSED(len);
+    UNUSED(timeout_ms);
+    return HAL_ERROR;
+}
+
+/**
+ * @brief Handle non-blocking I2C receive
+ * @note This function should not be modified, when the callback is needed, OK_I2C_NON_BLOCKING_RECEIVE should be implemented in the user file
+ *
+ * @param hi2c I2C handle
+ * @param address 8-bit device address
+ * @param buf Pointer to the data to receive
+ * @param len Length of the data to receive
+ * @param timeout_ms how long to wait for transaction to complete
+ * @return HAL_StatusTypeDef
+ */
+extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_RECEIVE(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
+{
+    UNUSED(hi2c);
+    UNUSED(address);
+    UNUSED(buf);
+    UNUSED(len);
+    UNUSED(timeout_ms);
+    return HAL_ERROR;
 }

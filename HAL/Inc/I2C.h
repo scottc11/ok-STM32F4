@@ -50,3 +50,19 @@ private:
 
     static I2C_TypeDef *get_i2c_instance(Instance instance);
 };
+
+// weak queue hooks (C linkage so they can be defined in C or C++ and don't get name mangled by compiler)
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+// Start a queued transmit on the given HAL I2C handle; return when complete or timed out.
+HAL_StatusTypeDef OK_I2C_NON_BLOCKING_TRANSMIT(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms);
+
+// Start a queued receive on the given HAL I2C handle; return when complete or timed out.
+HAL_StatusTypeDef OK_I2C_NON_BLOCKING_RECEIVE(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms);
+
+#ifdef __cplusplus
+}
+#endif
