@@ -164,9 +164,9 @@ I2C_TypeDef *I2C::get_i2c_instance(Instance instance)
  * @param timeout_ms how long to wait for transaction to complete
  * @return HAL_StatusTypeDef
  */
-extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_TRANSMIT(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
+extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_TRANSMIT(I2C *instance, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
 {
-    UNUSED(hi2c);
+    UNUSED(instance);
     UNUSED(address);
     UNUSED(buf);
     UNUSED(len);
@@ -185,9 +185,9 @@ extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_TRANSMIT(I2C_HandleTypeD
  * @param timeout_ms how long to wait for transaction to complete
  * @return HAL_StatusTypeDef
  */
-extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_RECEIVE(I2C_HandleTypeDef *hi2c, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
+extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_RECEIVE(I2C *instance, uint16_t address, uint8_t *buf, uint16_t len, uint32_t timeout_ms)
 {
-    UNUSED(hi2c);
+    UNUSED(instance);
     UNUSED(address);
     UNUSED(buf);
     UNUSED(len);

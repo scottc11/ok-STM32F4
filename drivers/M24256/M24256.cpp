@@ -87,6 +87,24 @@ uint8_t M24256::readByte(uint16_t memAddress)
 
 
 /**
+ * @brief Read a buffer of data from the EEPROM
+ * 
+ * @param memAddress
+ * @param buffer
+ * @param length
+ */
+HAL_StatusTypeDef M24256::readBufferAsync(uint16_t memAddress, uint8_t *buffer, uint16_t length)
+{
+    static uint8_t write_buffer[2];
+    write_buffer[0] = (uint8_t)(memAddress >> 8);   // MSB of memory address
+    write_buffer[1] = (uint8_t)(memAddress & 0xFF); // LSB of memory address
+
+    i2c->write(address, write_buffer, 2);
+    vTaskDelay(pdMS_TO_TICKS(M24256_WRITE_CYCLE_TIME_MS));
+    return OK_I2C_NON_BLOCKING_RECEIVE(i2c, this->address, buffer, length, 0);
+}
+
+/**
  * @brief This input signal is useful for protecting the entire contents of the memory from inadvertent write operations. Write
  * operations are disabled to the entire memory array when write control (WC) is driven high. Write operations are
  * enabled when write control (WC) is either driven low or left floating.

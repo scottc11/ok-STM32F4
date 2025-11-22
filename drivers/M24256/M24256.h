@@ -11,6 +11,7 @@
 #define M24256_PAGE_SIZE 64           // Page size in bytes
 #define M24256_WRITE_CYCLE_TIME_MS 5   // Max write cycle time
 #define M24256_TOTAL_SIZE 32768        // Total size in bytes (32KB)
+#define M24256_READ_CHUNK_SIZE 128     // Chunk size for reads (128–256 recommended)
 
 class M24256
 {
@@ -30,6 +31,7 @@ public:
     void writeByte(uint16_t memAddress, uint8_t data);
     uint8_t readByte(uint16_t memAddress);
     void writePage(uint16_t address, uint8_t *data, uint8_t length);
+    HAL_StatusTypeDef readBufferAsync(uint16_t memAddress, uint8_t *buffer, uint16_t length);
     HAL_StatusTypeDef writeBuffer(uint16_t address, const uint8_t *data, uint16_t length);
     void setWriteControl(bool state);
     
