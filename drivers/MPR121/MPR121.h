@@ -74,7 +74,7 @@ public:
     };
 
     struct TouchedNode {
-      uint8_t pad;
+      uint8_t pad; // 0..11
       struct TouchedNode *next;
       struct TouchedNode *prev;
     };
@@ -105,7 +105,7 @@ public:
     uint16_t getCurrTouched();
     uint16_t getPrevTouched();
     uint8_t getLastTouchedNode();
-    int getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads);
+    int getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads, uint16_t ignore = 0x0);
     bool interruptDetected();
     int readInterruptPin();
 

@@ -358,15 +358,21 @@ uint8_t MPR121::getLastTouchedNode()
  *
  * @param orderedPads Array to store the pad indices in order
  * @param maxPads Maximum number of pads to return (size of orderedPads array)
+ * @param ignore Pads to ignore (bitmask)
  * @return int Number of pads returned
  */
-int MPR121::getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads)
+int MPR121::getTouchedPadsInOrder(uint8_t *orderedPads, int maxPads, uint16_t ignore)
 {
     int count = 0;
     struct TouchedNode *temp = touchedHead;
     
     while (temp != NULL && count < maxPads)
     {
+        if (bitwise_read_bit(ignore, temp->pad))
+        {
+            temp = temp->next;
+            continue;
+        }
         orderedPads[count] = temp->pad;
         count++;
         temp = temp->next;
