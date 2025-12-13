@@ -22,6 +22,13 @@ void SoftwareTimer::start(TickType_t delay /*= 0*/)
     }
 }
 
+void SoftwareTimer::startFromISR(TickType_t delay /*= 0*/)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xTimerStartFromISR(handle, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
 /**
  * @brief stops a timer that was previously started
  * @note Do not use a block time if calling a timer API function from a timer callback function, as doing so could cause a deadlock!
@@ -29,6 +36,20 @@ void SoftwareTimer::start(TickType_t delay /*= 0*/)
 void SoftwareTimer::stop(TickType_t delay /*= 0*/)
 {
     xTimerStop(handle, delay);
+}
+
+/**
+ * @brief stops a timer that was previously started
+ * @note Do not use a block time if calling a timer API function from a timer callback function, as doing so could cause a deadlock!
+ */
+void SoftwareTimer::stopFromISR(TickType_t delay /*= 0*/)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xTimerStopFromISR(handle, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken != pdFALSE)
+    {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 /**
@@ -41,6 +62,20 @@ void SoftwareTimer::stop(TickType_t delay /*= 0*/)
 void SoftwareTimer::reset(TickType_t delay /*= 0*/)
 {
     xTimerReset(handle, delay);
+}
+
+/**
+ * @brief re-starts a timer that was previously created using the xTimerCreate() API function.
+ * @note Do not use a block time if calling a timer API function from a timer callback function, as doing so could cause a deadlock!
+ */
+void SoftwareTimer::resetFromISR(TickType_t delay /*= 0*/)
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xTimerResetFromISR(handle, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken != pdFALSE)
+    {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 /**

@@ -33,8 +33,11 @@ public:
     ~SoftwareTimer();
 
     void start(TickType_t delay = 0);
+    void startFromISR(TickType_t delay = 0);
     void stop(TickType_t delay = 0);
+    void stopFromISR(TickType_t delay = 0);
     void reset(TickType_t delay = 0);
+    void resetFromISR(TickType_t delay = 0);
     bool isRunning();
     
     TickType_t getPeriod();
