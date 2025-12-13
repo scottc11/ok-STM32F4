@@ -15,7 +15,9 @@ void Metronome::init()
 void Metronome::start()
 {
     this->reset();
+    running = true;
     HAL_StatusTypeDef status;
+    __HAL_TIM_SET_ICPRESCALER(&htim2, TIM_CHANNEL_3, TIM_ICPSC_DIV1);
     status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
     error_handler(status);
     status = HAL_TIM_Base_Start_IT(&htim4);
@@ -23,7 +25,8 @@ void Metronome::start()
 }
 
 void Metronome::stop() {
-    HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
+    running = false;
+    // HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     HAL_TIM_Base_Stop_IT(&htim4);
 }
 
@@ -260,6 +263,52 @@ void Metronome::setPulseFrequency(uint32_t ticks)
  */
 void Metronome::handleInputCaptureCallback()
 {
+    // Get the current capture value
+    uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
+    
+    // Store the previous capture value for future use
+    static uint32_t previousCapture = 0;
+    
+    // Calculate period between captures, handling potential overflow
+    if (previousCapture == 0) {
+        // First valid capture after reset
+        capturePeriod = currentCapture;
+    } else {
+        // Calculate period between captures
+        capturePeriod = tim_get_capture_period(&htim2, currentCapture, previousCapture);
+    }
+    
+    // Update previous capture for next calculation
+    previousCapture = currentCapture;
+    
+    // check if external BPM has exceeded internal limits
+    uint32_t ticksPerPulse = capturePeriod / PPQN;
+    static uint8_t bpmExceededCount = 0;
+    if (ticksPerPulse > MAX_TICKS_PER_PULSE)
+    {
+        ticksPerPulse = MAX_TICKS_PER_PULSE;
+    }
+    else if (ticksPerPulse < MIN_TICKS_PER_PULSE)
+    {
+        ticksPerPulse = MIN_TICKS_PER_PULSE;
+        bpmExceededCount++;
+        if (bpmExceededCount >= 3)
+        {
+            bpmExceeded = true;
+            bpmExceededCount = 0;
+            if (bpmExceededCallback)
+                bpmExceededCallback(capturePeriod);
+        }
+    } else {
+        if (bpmExceeded)
+        {
+            bpmExceeded = false;
+            bpmExceededCount = 0;
+            if (bpmStabilizedCallback)
+                bpmStabilizedCallback();
+        }
+    }
+
     // almost always, there will need to be at least 1 pulse not yet executed prior to an input capture,
     // so you must execute all remaining until
     if (pulse < PPQN - 1)
@@ -271,30 +320,11 @@ void Metronome::handleInputCaptureCallback()
         }
     }
 
-    // Get the current capture value
-    uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
-    
-    // Store the previous capture value for future use
-    static uint32_t previousCapture = 0;
-    
-    // Calculate period between captures, handling potential overflow
-    uint32_t inputCapture;
-    if (previousCapture == 0) {
-        // First valid capture after reset
-        inputCapture = currentCapture;
-    } else {
-        // Calculate period between captures
-        inputCapture = tim_get_capture_period(&htim2, currentCapture, previousCapture);
-    }
-    
-    // Update previous capture for next calculation
-    previousCapture = currentCapture;
-    
     // Reset only the TIM4 counter, keep TIM2 running
     __HAL_TIM_SetCounter(&htim4, 0);
     __HAL_TIM_ENABLE(&htim4);     // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
     
-    this->setPulseFrequency(inputCapture / PPQN);
+    this->setPulseFrequency(ticksPerPulse);
     this->pulse = 0;
     this->handleOverflowCallback();
 
@@ -399,6 +429,16 @@ void Metronome::attachBarResetCallback(Callback<void()> func)
 void Metronome::attachCorrectionCallback(Callback<void(uint8_t pulse)> func)
 {
     correctionCallback = func;
+}
+
+void Metronome::attachBPMExceededCallback(Callback<void(uint32_t capture)> func)
+{
+    bpmExceededCallback = func;
+}
+
+void Metronome::attachBPMStabilizedCallback(Callback<void()> func)
+{
+    bpmStabilizedCallback = func;
 }
 
 /**
