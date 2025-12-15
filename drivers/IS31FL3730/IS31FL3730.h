@@ -44,6 +44,8 @@ public:
     void setPWMRegister(uint8_t pwm);
     void reset();
 
+    void setPixel(uint8_t x, uint8_t y, bool on);
+
 private:
     // Shadow buffer for all matrix data registers.
     // framebuffer[matrix][column] holds the byte that will be written to the corresponding data register (bits R8..R1).

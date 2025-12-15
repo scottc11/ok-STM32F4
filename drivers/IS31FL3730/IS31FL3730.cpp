@@ -157,3 +157,27 @@ void IS31FL3730::reset() {
     buffer[1] = 0x00; // Reset Register value
     i2c->write(address, buffer, 2);
 }
+
+void IS31FL3730::setPixel(uint8_t x, uint8_t y, bool on) {
+    // Columns alternate between Matrix 1 and Matrix 2:
+    //  x = 0 -> Matrix 1, column 0
+    //  x = 1 -> Matrix 2, column 0
+    //  x = 2 -> Matrix 1, column 1
+    //  x = 3 -> Matrix 2, column 1
+    //  ...
+    uint8_t matrix_index = (x % 2 == 0) ? 0 : 1;
+
+    // Local column index within each matrix
+    uint8_t column = x / 2;
+
+    // Each column register holds one bit per row; y selects the bit.
+    uint8_t mask = static_cast<uint8_t>(1u << y);
+
+    if (on) {
+        framebuffer[matrix_index][column] |= mask;
+    } else {
+        framebuffer[matrix_index][column] &= static_cast<uint8_t>(~mask);
+    }
+
+    setMatrixDataRegister(matrix_index, column, framebuffer[matrix_index][column]);
+}
