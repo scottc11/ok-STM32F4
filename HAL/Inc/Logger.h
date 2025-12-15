@@ -9,8 +9,8 @@ public:
     Logger(){};
 
     void init();
-    void log(const char *string, ...);
-    void log(int number);
-    void log(float number);
-    void logSystemStatus();
+    uint8_t log(const char *string, ...);
+    uint8_t log(int number);
+    uint8_t log(float number);
+    uint8_t logSystemStatus();
 };

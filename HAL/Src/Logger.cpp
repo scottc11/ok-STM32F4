@@ -20,7 +20,7 @@ void Logger::init() {
  * %e or %E: Used to print floating-point numbers in scientific notation (exponential format).
  * %%: Used to print a literal percent sign (%).
  */
-void Logger::log(const char *string, ...)
+uint8_t Logger::log(const char *string, ...)
 {
     char buffer[48]; // Buffer to store the formatted string
 
@@ -31,20 +31,22 @@ void Logger::log(const char *string, ...)
     vsnprintf(buffer, sizeof(buffer), string, args);
 
     va_end(args); // Cleanup the argument list
+    // note: you can remove this while loop for non-blocking transmit
     while(CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer)) == USBD_BUSY);
+    return USBD_OK;
 }
 
-void Logger::log(int number)
+uint8_t Logger::log(int number)
 {
     this->log("%d\n", number);
 }
 
-void Logger::log(float number)
+uint8_t Logger::log(float number)
 {
     this->log("%.3f\n", number);
 }
 
-void Logger::logSystemStatus() {
+uint8_t Logger::logSystemStatus() {
     this->log("SYSCLK: %d\n", HAL_RCC_GetSysClockFreq());
     HAL_Delay(10);
     this->log("HCLK: %d\n", HAL_RCC_GetHCLKFreq());
@@ -53,4 +55,5 @@ void Logger::logSystemStatus() {
     HAL_Delay(10);
     this->log("PCLK2: %d\n", HAL_RCC_GetPCLK2Freq());
     HAL_Delay(10);
+    return 0;
 }
