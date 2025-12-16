@@ -28,7 +28,8 @@ public:
     CHAN_D = 0x3,
   };
   
-  SPI spi;
+  SPI *spi;
+  DigitalOut selectPin;
   int baseline = 485;
   int ceiling = 64741;
 
@@ -36,34 +37,14 @@ public:
    * NOTE: Texas Instruments requires special SPI formatting, most commonly known as SPI Mode #1
    * NOTE: Certain STM32 SPI periferals have limited bus speeds
   */
-  DAC8554(SPI_TypeDef *spi_instance, PinName spiMosi, PinName spiSck, PinName selectPin) : spi(spi_instance, spiMosi, NC, spiSck, 1, selectPin)
+  DAC8554(SPI *_spi, PinName _selectPin) : selectPin(_selectPin, 1)
   {
-    // spi.frequency(25000000); // 25MHz
+    spi = _spi;
   }
   
   void init();
   void write(DAC8554::Channel chan, uint16_t value, uint8_t mode = DAC85X4_SINGLE_WRITE);
   void setInternalVoltageReference(bool enabled);
-
-private:
-  
-  // 8 MSBs are used as control bits and the 16 LSBs are used as data
-  // the DAC8554 requires its data with the MSB as the first bit received
-  // byte1 --> | A1 | A0 | LD1 | LD0 | X | DAC Select 1 | DAC Select 0 | PD0 |
-  // byte2 --> | D15 | D14 | D13 | D12 | D11 | D10 | D9 | D8 |
-  // byte3 --> | D7  | D6  | D5  | D4  | D3  | D2  | D1 | D0 |
-  void writeRegister(uint8_t config, uint16_t data) {
-    
-    uint8_t byte1 = config;
-    uint8_t byte2 = (data >> 8) & 0xFF;
-    uint8_t byte3 = data & 0xFF;
-    uint8_t buffer[3] = { byte1, byte2, byte3 };
-    spi.write(buffer, 3);
-  }
-  
-  enum Registers {
-
-  };
 };
 
 #endif
