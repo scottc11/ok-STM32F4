@@ -62,20 +62,20 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
     status = HAL_TIM_Base_Init(&this->htim);
     if (status != HAL_OK)
     {
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_Base_Init");
     }
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     status = HAL_TIM_ConfigClockSource(&this->htim, &sClockSourceConfig);
     if (status != HAL_OK)
     {
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_ConfigClockSource");
     }
 
     status = HAL_TIM_IC_Init(&this->htim);
     if (status != HAL_OK)
     {
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_Init");
     }
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
@@ -86,7 +86,7 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
     status = HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, channel);
     if (status != HAL_OK)
     {
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
     }
 }
 

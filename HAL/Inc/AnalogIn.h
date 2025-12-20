@@ -7,6 +7,7 @@
 #include "okSemaphore.h"
 #include "okQueue.h"
 #include "uart_logger.h"
+#include "gpio_api.h"
 
 #define ADC_SAMPLE_COUNTER_LIMIT 2000
 #define ADC_DEFAULT_INPUT_MAX BIT_MAX_16

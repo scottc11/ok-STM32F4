@@ -17,9 +17,9 @@ void Metronome::start()
     this->reset();
     HAL_StatusTypeDef status;
     status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
-    error_handler(status);
+    OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
     status = HAL_TIM_Base_Start_IT(&htim4);
-    error_handler(status);
+    OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
 }
 
 void Metronome::stop() {
@@ -100,7 +100,7 @@ void Metronome::setInputNoteDivision(InputNoteDivision division)
 
     HAL_StatusTypeDef status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
     if (status != HAL_OK)
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
 
     // Restart input capture if external input mode is enabled
     if (externalInputMode)
@@ -161,20 +161,20 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     status = HAL_TIM_Base_Init(&htim2);
     if (status != HAL_OK)
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_Base_Init");
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig);
 
     status = HAL_TIM_IC_Init(&htim2);
     if (status != HAL_OK)
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_ConfigClockSource");
 
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     status = HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
     if (status != HAL_OK)
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_Init");
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
@@ -182,7 +182,7 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
     sConfigIC.ICFilter = 0;                 // filter used to "debounce" the input signal
     status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
     if (status != HAL_OK)
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
 }
 
 /**

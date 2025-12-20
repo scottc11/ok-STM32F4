@@ -73,7 +73,7 @@ void SPI::init(uint32_t prescaler /*=SPI_BAUDRATEPRESCALER_32*/, uint8_t bitOrde
     
     HAL_StatusTypeDef status;
     status = HAL_SPI_Init(&_hspi);
-    error_handler(status);
+    OK_ERROR_HANDLER(status, "HAL_SPI_Init");
     _mutex.unlock();
 }
 
@@ -115,7 +115,7 @@ void SPI::write(uint8_t *data, int length)
 
     status = HAL_SPI_Transmit(&_hspi, (uint8_t *)data, length, HAL_MAX_DELAY);
     if (status != HAL_OK) {
-        error_handler(status);
+        OK_ERROR_HANDLER(status, "HAL_SPI_Transmit");
     }
     
     if (_slaveSelect._pin) _slaveSelect.write(1);

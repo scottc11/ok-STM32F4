@@ -3,6 +3,7 @@
 #include "common.h"
 #include "Callback.h"
 #include "tim_api.h"
+#include "gpio_api.h"
 
 #define TIM_MAX_NUM_INSTANCES 14
 

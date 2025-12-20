@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "gpio_api.h"
 
 class DigitalOut {
 public:

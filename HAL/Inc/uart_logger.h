@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "okQueue.h"
+#include "gpio_api.h"
 
 #ifndef OK_UART_RX
 #define OK_UART_RX (PinName) PC_11
