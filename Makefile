@@ -65,6 +65,7 @@ CPP_SOURCES += $(shell find $(LIB_PATH)/HAL -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/RTOS -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/misc -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/utils -name '*.cpp')
+CPP_SOURCES += $(shell find $(LIB_PATH)/tasks -name '*.cpp')
 
 
 C_INCLUDES += \
@@ -84,6 +85,7 @@ C_INCLUDES += \
 -I$(LIB_PATH)/middleware/USB_DEVICE/App \
 -I$(LIB_PATH)/middleware/USB_DEVICE/Target \
 -I$(LIB_PATH)/misc \
+-I$(LIB_PATH)/tasks \
 -I$(LIB_PATH)/system/Inc \
 -I$(LIB_PATH)/utils \
 

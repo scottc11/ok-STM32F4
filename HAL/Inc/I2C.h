@@ -34,6 +34,7 @@ public:
     Mode _mode;
 
     I2C(PinName sda, PinName scl, Instance inst, Mode mode = Blocking) {
+        instances[inst] = this;
         _sda_pin = sda;
         _scl_pin = scl;
         _instance = inst;
@@ -44,12 +45,18 @@ public:
     HAL_StatusTypeDef write(int address, uint8_t *data, int length, bool repeated = false);
     int read(int address, uint8_t *data, int length, bool repeated = false);
 
+    // registry of instances, index 1..3 (0 unused)
+    static I2C *instances[4];
+
 private:
-
     Mutex mutex;
-
     static I2C_TypeDef *get_i2c_instance(Instance instance);
 };
+
+// global i2c instances (to be used in application code)
+extern I2C i2c1;
+extern I2C i2c2;
+extern I2C i2c3;
 
 // weak queue hooks (C linkage so they can be defined in C or C++ and don't get name mangled by compiler)
 #ifdef __cplusplus

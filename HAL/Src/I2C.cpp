@@ -1,5 +1,8 @@
 #include "I2C.h"
 
+// registry of instances, index 1..3 (0 unused)
+I2C *I2C::instances[4] = {nullptr, nullptr, nullptr, nullptr};
+
 void I2C::init()
 {
     mutex.lock();
@@ -193,4 +196,52 @@ extern "C" __weak HAL_StatusTypeDef OK_I2C_NON_BLOCKING_RECEIVE(I2C *instance, u
     UNUSED(len);
     UNUSED(timeout_ms);
     return HAL_ERROR;
+}
+
+extern "C" void I2C1_EV_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_1];
+    if (i2c) {
+        HAL_I2C_EV_IRQHandler(&i2c->_hi2c);
+    }
+}
+
+extern "C" void I2C1_ER_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_1];
+    if (i2c) {
+        HAL_I2C_ER_IRQHandler(&i2c->_hi2c);
+    }
+}
+
+extern "C" void I2C2_EV_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_2];
+    if (i2c) {
+        HAL_I2C_EV_IRQHandler(&i2c->_hi2c);
+    }
+}
+
+extern "C" void I2C2_ER_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_2];
+    if (i2c) {
+        HAL_I2C_ER_IRQHandler(&i2c->_hi2c);
+    }
+}
+
+extern "C" void I2C3_EV_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_3];
+    if (i2c) {
+        HAL_I2C_EV_IRQHandler(&i2c->_hi2c);
+    }
+}
+
+extern "C" void I2C3_ER_IRQHandler(void)
+{
+    I2C *i2c = I2C::instances[I2C::Instance::I2C_3];
+    if (i2c) {
+        HAL_I2C_ER_IRQHandler(&i2c->_hi2c);
+    }
 }
