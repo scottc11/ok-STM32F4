@@ -123,6 +123,13 @@ void SPI::write(uint8_t *data, int length)
     _mutex.unlock();
 }
 
+/**
+ * @brief Read and write data to the SPI bus
+ * 
+ * @param data_in reception buffer
+ * @param data_out transmission buffer
+ * @param length number of bytes to read and write
+ */
 void SPI::readWrite(uint8_t *data_in, uint8_t *data_out, int length)
 {
     _mutex.lock();
