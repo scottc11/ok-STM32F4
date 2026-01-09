@@ -18,7 +18,7 @@ public:
 
         if (_pin != NC)
         {
-            for (int i = 0; i < NUM_GPIO_IRQ_INSTANCES; i++)
+            for (int i = 0; i < NUM_GPIO_INSTANCES; i++)
             {
                 if (_instances[i] == NULL)
                 {
