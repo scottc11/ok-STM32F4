@@ -246,13 +246,13 @@ extern "C" void TIM2_IRQHandler(void)
 
 extern "C" void TIM3_IRQHandler(void)
 {
-    // HardwareTimer::RouteTimerGlobalInterrupt(TIM3);
+    HardwareTimer::RouteTimerGlobalInterrupt(TIM3);
 }
 
 extern "C" void TIM4_IRQHandler(void)
 {
-    // Metronome::RouteTimerGlobalInterrupt(TIM4);
-    // HardwareTimer::RouteTimerGlobalInterrupt(TIM4);
+    Metronome::RouteTimerGlobalInterrupt(TIM4);
+    HardwareTimer::RouteTimerGlobalInterrupt(TIM4);
 }
 
 // extern "C" void TIM5_IRQHandler(void) // defined in stm32f4xx_it.h
