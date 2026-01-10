@@ -5,7 +5,7 @@ void M24256::init()
     // isConnected = i2c->isDeviceReady(address);
     if (!isConnected)
     {
-        error_handler(HAL_ERROR);
+        OK_ERROR_HANDLER(HAL_ERROR, "M24256 not connected");
     }
 }
 
@@ -83,6 +83,23 @@ uint8_t M24256::readByte(uint16_t memAddress)
     i2c->write(address, buffer, 2);
     i2c->read(address, buffer, 1);
     return buffer[0];
+}
+
+/**
+ * @brief Read a 16-bit value from the EEPROM using two 8-bit reads
+ * 
+ * @param memAddress the address to read from
+ * @return the 16-bit value read from the EEPROM
+ */
+uint16_t M24256::readByte16(uint16_t memAddress)
+{
+    uint8_t buffer[2];
+    buffer[0] = (uint8_t)(memAddress >> 8);   // MSB of memory address
+    buffer[1] = (uint8_t)(memAddress & 0xFF); // LSB of memory address
+
+    i2c->write(address, buffer, 2);
+    i2c->read(address, buffer, 2);
+    return two8sTo16(buffer[0], buffer[1]);
 }
 
 
