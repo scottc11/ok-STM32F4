@@ -33,33 +33,43 @@ void M24256::writePage(uint16_t address, uint8_t *data, uint8_t length)
 
 HAL_StatusTypeDef M24256::writeBuffer(uint16_t address, const uint8_t *data, uint16_t length)
 {
+    // Nothing to write or invalid pointer – treat as success and return
     if (length == 0 || data == nullptr)
         return HAL_OK;
 
     HAL_StatusTypeDef status = HAL_OK;
-    uint16_t memAddress = address;
-    uint16_t remaining = length;
-    uint16_t dataIndex = 0;
+    uint16_t memAddress = address;  // current EEPROM write address
+    uint16_t remaining = length;    // how many bytes we still need to write
+    uint16_t dataIndex = 0;         // index into the caller-provided data buffer
 
+    // Write until we've sent all requested bytes
     while (remaining > 0)
     {
+        // Calculate how many bytes we can still fit into the current EEPROM page
         uint8_t pageOffset = memAddress % M24256_PAGE_SIZE;
         uint8_t pageRoom = M24256_PAGE_SIZE - pageOffset;
+        // Chunk is the number of bytes we will write in this iteration
         uint8_t chunk = (remaining < pageRoom) ? remaining : pageRoom;
         if (chunk > M24256_PAGE_SIZE)
             chunk = M24256_PAGE_SIZE;
 
+        // Local I2C buffer: [addr_high, addr_low, data0, data1, ...]
         uint8_t buffer[2 + M24256_PAGE_SIZE];
+        // 16-bit EEPROM memory address split into two bytes
         buffer[0] = static_cast<uint8_t>(memAddress >> 8);
         buffer[1] = static_cast<uint8_t>(memAddress & 0xFF);
+        // Copy the next `chunk` bytes from the source data into the transmit buffer
         memcpy(&buffer[2], &data[dataIndex], chunk);
 
+        // Perform the actual I2C write of address + data payload
         status = i2c->write(this->address, buffer, 2 + chunk);
         if (status != HAL_OK)
             return status;
 
+        // Wait for the EEPROM internal write cycle to complete
         vTaskDelay(pdMS_TO_TICKS(M24256_WRITE_CYCLE_TIME_MS));
 
+        // Advance our position in both the EEPROM and the source buffer
         memAddress += chunk;
         dataIndex += chunk;
         remaining -= chunk;
