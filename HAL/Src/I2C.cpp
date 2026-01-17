@@ -153,6 +153,9 @@ I2C_TypeDef *I2C::get_i2c_instance(Instance instance)
             return I2C2;
         case Instance::I2C_3:
             return I2C3;
+        default:
+            return nullptr;
+            break;
     }
 }
 

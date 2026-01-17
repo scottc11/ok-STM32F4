@@ -28,6 +28,7 @@ uint8_t Ratchet::calculateRatchet(uint16_t input)
             }
         }
     }
+    return 0;
 }
 
 /**
@@ -55,6 +56,7 @@ bool Ratchet::handleRatchet(int position, uint16_t input)
             return true;
         }
     }
+    return false;
 }
 
 /**

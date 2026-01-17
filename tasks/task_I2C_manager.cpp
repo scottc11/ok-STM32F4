@@ -18,7 +18,6 @@ void task_I2C_manager(void *pvParameters)
         i2c_queue = xQueueCreate(100, sizeof(I2CRequest));
     }
 
-    TickType_t next = xTaskGetTickCount();
     static I2CRequest current_req;
 
     vTaskDelay(pdMS_TO_TICKS(100));
@@ -43,6 +42,9 @@ void task_I2C_manager(void *pvParameters)
                     break;
                 case RequestType::Receive:
                     status = HAL_I2C_Master_Receive_IT(&current_req.instance->_hi2c, current_req.addr, current_req.buf, current_req.len);
+                    break;
+                default:
+                    status = HAL_ERROR;
                     break;
             }
 

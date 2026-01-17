@@ -38,22 +38,23 @@ uint8_t Logger::log(const char *string, ...)
 
 uint8_t Logger::log(int number)
 {
-    this->log("%d\n", number);
+    return this->log("%d\n", number);
 }
 
 uint8_t Logger::log(float number)
 {
-    this->log("%.3f\n", number);
+    return this->log("%.3f\n", number);
 }
 
 uint8_t Logger::logSystemStatus() {
-    this->log("SYSCLK: %d\n", HAL_RCC_GetSysClockFreq());
+    uint8_t status = 0;
+    status = this->log("SYSCLK: %d\n", HAL_RCC_GetSysClockFreq());
     HAL_Delay(10);
-    this->log("HCLK: %d\n", HAL_RCC_GetHCLKFreq());
+    status = this->log("HCLK: %d\n", HAL_RCC_GetHCLKFreq());
     HAL_Delay(10);
-    this->log("PCLK1: %d\n", HAL_RCC_GetPCLK1Freq());
+    status = this->log("PCLK1: %d\n", HAL_RCC_GetPCLK1Freq());
     HAL_Delay(10);
-    this->log("PCLK2: %d\n", HAL_RCC_GetPCLK2Freq());
+    status = this->log("PCLK2: %d\n", HAL_RCC_GetPCLK2Freq());
     HAL_Delay(10);
-    return 0;
+    return status;
 }

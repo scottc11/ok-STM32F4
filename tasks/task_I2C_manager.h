@@ -29,7 +29,7 @@ struct I2CBusState
     uint8_t err;
 };
 
-static I2CBusState buses[] = {
+static I2CBusState buses[] __attribute__((unused)) = {
     {&i2c1, nullptr, {}, 0, 0},
     {&i2c2, nullptr, {}, 0, 0},
     {&i2c3, nullptr, {}, 0, 0},

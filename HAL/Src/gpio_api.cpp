@@ -253,5 +253,9 @@ IRQn_Type gpio_get_irq_line(PinName pin)
         return EXTI15_10_IRQn;
     case GPIO_PIN_15:
         return EXTI15_10_IRQn;
+    default:
+        // Invalid pin number: trap in debug, never return a bogus IRQ.
+        assert_param(0);
+        __builtin_unreachable();
     }
 }
