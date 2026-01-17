@@ -43,6 +43,15 @@ uint32_t ok_random_uint32()
 }
 
 /**
+ * @brief generate a random uint16_t value
+ * @return uint16_t
+ */
+uint16_t ok_random_uint16()
+{
+    return static_cast<uint16_t>(ok_random_uint32() & 0xFFFFu);
+}
+
+/**
  * @brief generate a random boolean value
  * @param seed you will want to pass a seed for a better coin flip
  * @return bool
