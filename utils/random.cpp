@@ -48,7 +48,9 @@ uint32_t ok_random_uint32()
  */
 uint16_t ok_random_uint16()
 {
-    return static_cast<uint16_t>(ok_random_uint32() & 0xFFFFu);
+    uint32_t r = ok_random_uint32();
+    return static_cast<uint16_t>(r >> 16); // use high bits (better quality)
+    // or: return static_cast<uint16_t>((r >> 16) ^ r); // mixed
 }
 
 /**
