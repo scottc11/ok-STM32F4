@@ -135,6 +135,23 @@ uint32_t tim_get_capture_period(TIM_HandleTypeDef *htim, uint32_t current, uint3
 }
 
 /**
+ * @brief Calculate the frequency of the input signal
+ * 
+ * @param htim 
+ * @param channel 
+ * @return float 
+ */
+float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t currCapture, uint32_t prevCapture)
+{
+    uint8_t capturePrescaler = tim_get_capture_prescaler(htim, channel);
+    uint32_t delta = (currCapture >= prevCapture) ? (currCapture - prevCapture) : (prevCapture - currCapture);
+    uint32_t inputCapture = delta / capturePrescaler;
+    uint16_t prescaler = htim->Init.Prescaler;
+    uint32_t timerClockHz = tim_get_APBx_freq(htim);
+    return static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));
+}
+
+/**
  * @brief
  * 1) Enables the TIM peripheral clock
  * 2) Sets the priority of the interrupt associated with the TIM peripheral
@@ -188,6 +205,66 @@ void tim_enable(TIM_TypeDef *instance) {
 }
 
 /**
+ * @brief Enable input capture for a timer
+ * 
+ * @param htim pointer to the timer handle
+ * @param instance timer instance (eg. TIM2, TIM3, TIM4, etc.)
+ * @param pin input capture pin (eg. PA_0, PA_1, etc.)
+ * @param channel input capture channel (eg. TIM_CHANNEL_1, TIM_CHANNEL_2, etc.)
+ * @param prescaler input capture prescaler (eg. 1, 2, 4, 8)
+ * @param period input capture period (eg. 65535 for 16-bit timer)
+ * @return HAL_StatusTypeDef status of the operation
+ */
+HAL_StatusTypeDef tim_enable_input_capture(TIM_HandleTypeDef *htim, TIM_TypeDef *instance, PinName pin, uint32_t channel, uint16_t prescaler, uint32_t period)
+{
+    tim_enable(instance); // enable timer clock
+
+    // configure input capture pin
+    intptr_t ptrInt = reinterpret_cast<intptr_t>(instance);
+    gpio_config_input_capture(pin, (TIMName)ptrInt);
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
+    HAL_StatusTypeDef status;
+
+    htim->Instance = instance;
+    htim->Init.Prescaler = prescaler;
+    htim->Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim->Init.Period = period;
+    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    status = HAL_TIM_Base_Init(htim);
+    if (status != HAL_OK)
+        OK_ERROR_HANDLER(status, "HAL_TIM_Base_Init");
+
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    HAL_TIM_ConfigClockSource(htim, &sClockSourceConfig);
+
+    status = HAL_TIM_IC_Init(htim);
+    if (status != HAL_OK)
+        OK_ERROR_HANDLER(status, "HAL_TIM_ConfigClockSource");
+
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    status = HAL_TIMEx_MasterConfigSynchronization(htim, &sMasterConfig);
+    if (status != HAL_OK)
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_Init");
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // dedicated prescaler allows to "slow down" the frequency of the input signal
+    sConfigIC.ICFilter = 0;                 // filter used to "debounce" the input signal
+    status = HAL_TIM_IC_ConfigChannel(htim, &sConfigIC, channel);
+    if (status != HAL_OK)
+        OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
+
+    return status;
+}
+
+
+
+/**
  * @brief Timer overflow callback
  * @note This function should not be modified, when the callback is needed, OK_TIM_PeriodElapsedCallback should be implemented in the user file
  * @param htim
@@ -219,8 +296,6 @@ __weak void OK_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
  */
 extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    // Metronome::RouteOverflowCallback(htim);          // TIM2 and TIM4 are used for Metro
-    // HardwareTimer::RoutePeriodElapsedCallback(htim); // generic timers
     OK_TIM_PeriodElapsedCallback(htim);              // to be defined in user application
     if (htim->Instance == TIM5)                      // TIM5 is being used for HAL ticker ie. for all HAL Peripherals...
     {
@@ -233,8 +308,6 @@ extern "C" void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  */
 extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-    // Metronome::RouteCaptureCallback(htim);
-    // HardwareTimer::RouteCaptureCallback(htim);
     OK_TIM_IC_CaptureCallback(htim);
 }
 

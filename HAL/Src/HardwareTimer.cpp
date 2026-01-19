@@ -39,18 +39,12 @@ void HardwareTimer::init(uint32_t prescaler, uint32_t period)
  * @param prescaler 
  * @param period 
  */
-void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t prescaler, uint32_t period)
+void HardwareTimer::initInputCapture(uint16_t prescaler, uint32_t period)
 {
-    this->isInputCapture = true;
-    this->channel = _channel;
-    tim_enable(this->_instance); // init clock and interrupt
-
-    intptr_t ptrInt = reinterpret_cast<intptr_t>(this->_instance);
-    gpio_config_input_capture(pin, (TIMName)ptrInt); // GPIO Init
-
     HAL_StatusTypeDef status;
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_IC_InitTypeDef sConfigIC = {0};
+
+    tim_enable(this->_instance);  // start peripheral clocks
 
     this->htim.Instance = this->_instance;
     this->htim.Init.Prescaler = prescaler;
@@ -77,17 +71,37 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
     {
         OK_ERROR_HANDLER(status, "HAL_TIM_IC_Init");
     }
+}
 
+void HardwareTimer::configureCaptureChannel(PinName pin, uint32_t _channel)
+{
+    intptr_t ptrInt = reinterpret_cast<intptr_t>(this->_instance);
+    gpio_config_input_capture(pin, (TIMName)ptrInt); // GPIO Init
+
+    HAL_StatusTypeDef status;
+    TIM_IC_InitTypeDef sConfigIC = {0};
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
     sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
     sConfigIC.ICFilter = 0;
 
-    status = HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, channel);
+    status = HAL_TIM_IC_ConfigChannel(&this->htim, &sConfigIC, _channel);
     if (status != HAL_OK)
     {
         OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
     }
+}
+
+void HardwareTimer::startCaptureChannel(uint32_t _channel)
+{
+    running = true;
+    HAL_TIM_IC_Start_IT(&this->htim, _channel);
+}
+
+void HardwareTimer::stopCaptureChannel(uint32_t _channel)
+{
+    running = false;
+    HAL_TIM_IC_Stop_IT(&this->htim, _channel);
 }
 
 /**
@@ -95,13 +109,8 @@ void HardwareTimer::initInputCapture(PinName pin, uint32_t _channel, uint16_t pr
  * 
  */
 void HardwareTimer::start() {
-    isRunning = true;
-    if (isInputCapture) {
-        HAL_TIM_IC_Start_IT(&this->htim, channel);
-        HAL_TIM_Base_Start_IT(&htim); // the overflow interrupt is useful for very low frequency signals
-    } else {
-        HAL_TIM_Base_Start_IT(&htim);
-    }
+    running = true;
+    HAL_TIM_Base_Start_IT(&htim);
 }
 
 /**
@@ -109,37 +118,26 @@ void HardwareTimer::start() {
  * 
  */
 void HardwareTimer::stop() {
-    isRunning = false;
-    if (isInputCapture) {
-        HAL_TIM_IC_Stop_IT(&this->htim, channel);
-        HAL_TIM_Base_Stop_IT(&htim);
-    } else {
-        HAL_TIM_Base_Stop_IT(&htim);
-    }
+    running = false;
+    HAL_TIM_Base_Stop_IT(&htim);
 }
 
 void HardwareTimer::reset()
 {
     this->overflowCount = 0;
     this->prevOverflowCount = 0;
-    this->currCapture = 0;
-    this->prevCapture = 0;
     __HAL_TIM_SetCounter(&this->htim, 0); // reset after each input capture
 }
 
-uint32_t HardwareTimer::getCapture()
+/**
+ * @brief Get the capture value of a channel
+ * 
+ * @param _channel ex. TIM_CHANNEL_2
+ * @return uint32_t 
+ */
+uint32_t HardwareTimer::getCapture(uint32_t _channel)
 {
-    return __HAL_TIM_GetCompare(&this->htim, this->channel);
-}
-
-float HardwareTimer::calculateCaptureFrequency()
-{
-    uint8_t capturePrescaler = getCapturePrescaler();
-    int32_t inputCapture = std::abs(this->currCapture - this->prevCapture) / capturePrescaler;
-    uint16_t prescaler = this->htim.Init.Prescaler;
-    uint32_t timerClockHz = tim_get_APBx_freq(&this->htim);
-    captureFrequency = static_cast<float>(timerClockHz) / (float)((inputCapture * (prescaler + 1)));
-    return captureFrequency;
+    return __HAL_TIM_GetCompare(&this->htim, _channel);
 }
 
 /**
@@ -179,7 +177,7 @@ void HardwareTimer::setPeriod(uint32_t period)
  *
  * @param prescaler TIM_ICPSC_DIV1, TIM_ICPSC_DIV2, TIM_ICPSC_DIV4, TIM_ICPSC_DIV8
  */
-void HardwareTimer::setCapturePrescaler(uint16_t prescaler)
+void HardwareTimer::setCapturePrescaler(uint32_t channel, uint16_t prescaler)
 {
     __HAL_TIM_SetICPrescaler(&this->htim, channel, prescaler);
 }
@@ -189,22 +187,9 @@ void HardwareTimer::setCapturePrescaler(uint16_t prescaler)
  *
  * @return uint8_t the integer equivelent of the prescaler
  */
-uint8_t HardwareTimer::getCapturePrescaler()
+uint8_t HardwareTimer::getCapturePrescaler(uint32_t channel)
 {
-    uint32_t prescaler = __HAL_TIM_GetICPrescaler(&this->htim, channel);
-    switch (prescaler)
-    {
-        case TIM_ICPSC_DIV1:
-            return 1;
-        case TIM_ICPSC_DIV2:
-            return 2;
-        case TIM_ICPSC_DIV4:
-            return 4;
-        case TIM_ICPSC_DIV8:
-            return 8;
-        default:
-            return 1;
-    }
+    return tim_get_capture_prescaler(&this->htim, channel);
 }
 
 void HardwareTimer::attachOverflowCallback(Callback<void()> callback) {
@@ -213,14 +198,6 @@ void HardwareTimer::attachOverflowCallback(Callback<void()> callback) {
 
 void HardwareTimer::detachOverflowCallback() {
     overflowCallback = NULL;
-}
-
-void HardwareTimer::attachCaptureCallback(Callback<void()> callback) {
-    captureCallback = callback;
-}
-
-void HardwareTimer::detachCaptureCallback() {
-    captureCallback = NULL;
 }
 
 /**
@@ -244,24 +221,6 @@ void HardwareTimer::RoutePeriodElapsedCallback(TIM_HandleTypeDef *_htim)
     }
 }
 
-void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
-{
-    for (auto ins : TIM_INSTANCES)
-    {
-        if (ins && ins->htim.Instance == _htim->Instance) // if instance not NULL
-        {
-            ins->prevCapture = ins->currCapture;
-            ins->prevOverflowCount = ins->overflowCount; // NOTE: this has the chance to be off by 1 (if overflow occurs while software executes this line)
-            ins->currCapture = ins->getCapture() + (ins->overflowCount * (ins->htim.Init.Period + 1));
-            if (ins->captureCallback)
-            {
-                ins->captureCallback();
-            }
-            break;
-        }
-    }
-}
-
 /**
  * @brief static method routes instance specific global timer interrupts into single function
  * 
@@ -270,7 +229,8 @@ void HardwareTimer::RouteCaptureCallback(TIM_HandleTypeDef *_htim)
 void HardwareTimer::RouteTimerGlobalInterrupt(TIM_TypeDef *instance) {
     for (auto ins : TIM_INSTANCES)
     {
-        if (ins && ins->htim.Instance == instance) // if instance not NULL
+        if (!ins) continue;
+        if (ins->htim.Instance == instance) // if instance matches
         {
             HAL_TIM_IRQHandler(&ins->htim);
             break;
