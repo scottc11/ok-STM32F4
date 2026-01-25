@@ -3,6 +3,8 @@
 TaskHandle_t th_i2c_manager;
 QueueHandle_t i2c_queue = nullptr;
 
+I2CRequest current_req;
+
 uint8_t i2c_tx_busy = 0;
 uint8_t i2c_tx_err = 0;
 
@@ -11,6 +13,8 @@ uint8_t i2c_rx_err = 0;
 
 void task_I2C_manager(void *pvParameters)
 {
+    uint32_t start_delay = pvParameters ? (uint32_t)pvParameters : 0u;
+    
     th_i2c_manager = xTaskGetCurrentTaskHandle();
 
     if (!i2c_queue)
@@ -18,13 +22,13 @@ void task_I2C_manager(void *pvParameters)
         i2c_queue = xQueueCreate(100, sizeof(I2CRequest));
     }
 
-    static I2CRequest current_req;
+    TickType_t last_wake_time = xTaskGetTickCount();
 
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(start_delay));
 
     while (1)
     {
-        OK_I2C_MANAGER_WHILE_LOOP_START();
+        OK_I2C_MANAGER_WHILE_LOOP_START(&last_wake_time);
 
         // 1) Drain ALL queued requests this tick (max 25ms)
         while (xQueueReceive(i2c_queue, &current_req, pdMS_TO_TICKS(25)) == pdPASS)
@@ -82,7 +86,7 @@ void task_I2C_manager(void *pvParameters)
             }
         }
         
-        OK_I2C_MANAGER_WHILE_LOOP_END();
+        OK_I2C_MANAGER_WHILE_LOOP_END(&last_wake_time);
     }
 }
 
@@ -96,37 +100,40 @@ can stop waiting on that transfer, mark it done/failed, and move on to the next 
 // Notify the i2c manager task that the i2c transaction has completed
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (hi2c->Instance == I2C1)
+    // Optional safety: make sure this matches the current request’s bus
+    if (current_req.instance && (&current_req.instance->_hi2c == hi2c))
     {
         i2c_tx_busy = 0;
-        BaseType_t hpw = pdFALSE;
-        vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
-        portYIELD_FROM_ISR(hpw);
     }
+    
+    BaseType_t hpw = pdFALSE;
+    vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
+    portYIELD_FROM_ISR(hpw);
 }
 
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (hi2c->Instance == I2C1)
+    if (current_req.instance && (&current_req.instance->_hi2c == hi2c))
     {
         i2c_rx_busy = 0;
-        BaseType_t hpw = pdFALSE;
-        vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
-        portYIELD_FROM_ISR(hpw);
     }
+
+    BaseType_t hpw = pdFALSE;
+    vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
+    portYIELD_FROM_ISR(hpw);
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
-    if (hi2c->Instance == I2C1)
+    if (current_req.instance && (&current_req.instance->_hi2c == hi2c))
     {
         i2c_tx_busy = 0;
         i2c_tx_err = 1;
-        BaseType_t hpw = pdFALSE;
-        // Treat like completion; manager will advance/skip
-        vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
-        portYIELD_FROM_ISR(hpw);
     }
+
+    BaseType_t hpw = pdFALSE;
+    vTaskNotifyGiveFromISR(th_i2c_manager, &hpw);
+    portYIELD_FROM_ISR(hpw);
 }
 
 /**
@@ -202,15 +209,17 @@ BaseType_t i2c_submit_async(const I2CRequest &req)
 /**
  * @brief User code can implement this to do something at the start of the I2C manager while loop
 */
-extern "C" __weak void OK_I2C_MANAGER_WHILE_LOOP_START()
+extern "C" __weak void OK_I2C_MANAGER_WHILE_LOOP_START(TickType_t *last_wake_time)
 {
+    UNUSED(last_wake_time);
     // default implementation does nothing
 }
 
 /**
  * @brief User code can implement this to do something at the end of the I2C manager while loop
 */
-extern "C" __weak void OK_I2C_MANAGER_WHILE_LOOP_END()
+extern "C" __weak void OK_I2C_MANAGER_WHILE_LOOP_END(TickType_t *last_wake_time)
 {
+    UNUSED(last_wake_time);
     // default implementation does nothing
 }

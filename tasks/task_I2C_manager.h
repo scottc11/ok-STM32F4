@@ -54,8 +54,8 @@ extern "C"
 {
 #endif
 
-void OK_I2C_MANAGER_WHILE_LOOP_START();
-void OK_I2C_MANAGER_WHILE_LOOP_END();
+void OK_I2C_MANAGER_WHILE_LOOP_START(TickType_t *last_wake_time);
+void OK_I2C_MANAGER_WHILE_LOOP_END(TickType_t *last_wake_time);
 
 #ifdef __cplusplus
 }
