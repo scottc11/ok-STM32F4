@@ -36,10 +36,14 @@ public:
     uint8_t stepsPerBar;    // value represents the number of quarter notes per bar (ie. 3/4, 4/4, 5/4, 6/4, 7/4)
     bool externalInputMode;
     bool externalPulseMode;  // when true, the metronome will use an external input signal to advance the clock by 1 PPQN
+    bool bpmExceeded;        //
     InputNoteDivision inputNoteDivision;
+    bool running;
 
     PinName capturePin;      // the pin to use for input capture (ex. PA_3)
     int captureChannel;      // the timer channel to use for input capture (ex. TIM_CHANNEL_2)
+    uint32_t capturePeriod;  // the period of the last input capture
+
     InterruptIn extPulseInput;
     InterruptIn extResetInput;
 
@@ -51,6 +55,8 @@ public:
     Callback<void(uint8_t pulse)> resetCallback;
     Callback<void(uint8_t pulse)> correctionCallback; // executes when IC happens prior to PPQN overflow
     Callback<void()> overflowCallback; // callback executes when a full step completes
+    Callback<void(uint32_t ticksPerPulse)> bpmExceededCallback; // callback executes when the external BPM exceeds the internal BPM limit
+    Callback<void()> bpmStabilizedCallback; // callback executes when the external BPM returns to within the internal BPM limit
 
     /**
      * @brief Construct a new Metronome object
@@ -68,6 +74,7 @@ public:
         ticksPerPulse = ticksPerStep / PPQN;
         stepsPerBar = 4;
         inputNoteDivision = InputNoteDivision::QUARTER_NOTE;
+        running = false;
     };
 
     void init();
@@ -96,6 +103,8 @@ public:
     void attachResetCallback(Callback<void(uint8_t pulse)> func);
     void attachBarResetCallback(Callback<void()> func);
     void attachCorrectionCallback(Callback<void(uint8_t pulse)> func);
+    void attachBPMExceededCallback(Callback<void(uint32_t capture)> func);
+    void attachBPMStabilizedCallback(Callback<void()> func);
 
     // Low Level HAL interupt handlers
     void handleInputCaptureCallback();

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "Callback.h"
+#include "common.h"
 
 enum MIDIstatus
 {
@@ -16,7 +17,11 @@ enum MIDIstatus
 
 class MIDI {
     public:
-        MIDI() {}
+        MIDI(UART_HandleTypeDef *_huart) {
+            this->huart = _huart;
+        }
+
+        UART_HandleTypeDef *huart;
 
         void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
         void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
