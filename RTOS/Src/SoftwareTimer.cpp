@@ -18,7 +18,8 @@ void SoftwareTimer::start(TickType_t delay /*= 0*/)
 {
     if (!xTimerIsTimerActive(handle))
     {
-        xTimerStart(handle, delay);
+        this->setPeriod(delay);
+        xTimerStart(handle, 100);
     }
 }
 
