@@ -311,10 +311,13 @@ extern "C" void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     OK_TIM_IC_CaptureCallback(htim);
 }
 
+extern void VCO_TIM2_IrqHandler(void);
+
 extern "C" void TIM2_IRQHandler(void)
 {
     Metronome::RouteTimerGlobalInterrupt(TIM2);
     HardwareTimer::RouteTimerGlobalInterrupt(TIM2);
+    VCO_TIM2_IrqHandler();
 }
 
 extern "C" void TIM3_IRQHandler(void)

@@ -112,6 +112,23 @@ uint16_t M24256::readByte16(uint16_t memAddress)
     return two8sTo16(buffer[0], buffer[1]);
 }
 
+/**
+ * @brief Read a buffer of data from the EEPROM (blocking)
+ *
+ * @param memAddress
+ * @param buffer
+ * @param length
+ */
+HAL_StatusTypeDef M24256::readBuffer(uint16_t memAddress, uint8_t *buffer, uint16_t length)
+{
+    uint8_t addr[2];
+    addr[0] = (uint8_t)(memAddress >> 8);   // MSB of memory address
+    addr[1] = (uint8_t)(memAddress & 0xFF); // LSB of memory address
+
+    i2c->write(address, addr, 2);
+    return static_cast<HAL_StatusTypeDef>(i2c->read(address, buffer, length));
+}
+
 
 /**
  * @brief Read a buffer of data from the EEPROM

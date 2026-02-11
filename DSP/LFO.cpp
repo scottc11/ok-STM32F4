@@ -96,16 +96,15 @@ void LFO::setWaveform(Waveform type)
 {
     waveform = type;
 }
-
-/**
- * @brief Set the frequency of the LFO based on a 12-bit value
- * 
- * @param value 
- * @return float 
- */
 void LFO::handleFrequencyControl(uint16_t value)
 {
-    this->setFrequency(ok_map<float>((float)value, 0.0f, 4095.0f, minFrequency, maxFrequency));
+    if (minFrequency > 0.0f && maxFrequency > minFrequency) {
+        float ratio = maxFrequency / minFrequency;
+        float t = static_cast<float>(value) / 4095.0f;
+        this->setFrequency(minFrequency * powf(ratio, t));
+    } else {
+        this->setFrequency(ok_map<float>((float)value, 0.0f, 4095.0f, minFrequency, maxFrequency));
+    }
 }
 
 /**
