@@ -3,6 +3,8 @@
 #include "common.h"
 #include "I2C.h"
 #include "DigitalOut.h"
+#include "Callback.h"
+#include "task_I2C_manager.h"
 
 // https://www.st.com/resource/en/datasheet/m24256-br.pdf
 
@@ -26,6 +28,11 @@ public:
     I2C *i2c;
     DigitalOut writeControlPin;
     bool isConnected = false;
+    bool asyncWriteInProgress = false;
+    bool asyncWriteFailure = false;
+    HAL_StatusTypeDef asyncWriteStatus = HAL_OK;
+    
+    Callback<void()> writeCompleteCallback; // callback function to notify the caller that the write is complete
 
     void init();
     void writeByte(uint16_t memAddress, uint8_t data);
@@ -34,7 +41,13 @@ public:
     void writePage(uint16_t address, uint8_t *data, uint8_t length);
     HAL_StatusTypeDef readBufferAsync(uint16_t memAddress, uint8_t *buffer, uint16_t length);
     HAL_StatusTypeDef writeBuffer(uint16_t address, const uint8_t *data, uint16_t length);
+    HAL_StatusTypeDef writeBufferAsync(uint16_t address, const uint8_t *data, uint16_t length);
     void setWriteControl(bool state);
     
     HAL_StatusTypeDef massErase();
+    HAL_StatusTypeDef massEraseAsync();
+
+    void attachWriteCompleteCallback(Callback<void()> func) {
+        writeCompleteCallback = func;
+    }
 };

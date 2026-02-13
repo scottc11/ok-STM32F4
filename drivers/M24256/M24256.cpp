@@ -1,5 +1,18 @@
 #include "M24256.h"
 
+struct M24256WriteJob
+{
+    M24256 *device;
+    uint16_t address;
+    uint16_t length;
+    uint8_t data[1];
+};
+
+static QueueHandle_t task_M24256_write_queue = nullptr;
+static TaskHandle_t task_M24256_write_handle = nullptr;
+
+static void task_M24256_start();
+
 void M24256::init()
 {
     // isConnected = i2c->isDeviceReady(address);
@@ -76,6 +89,36 @@ HAL_StatusTypeDef M24256::writeBuffer(uint16_t address, const uint8_t *data, uin
     }
 
     return status;
+}
+
+HAL_StatusTypeDef M24256::writeBufferAsync(uint16_t address, const uint8_t *data, uint16_t length)
+{
+    if (length == 0 || data == nullptr)
+        return HAL_OK;
+
+    task_M24256_start();
+    if (task_M24256_write_queue == nullptr)
+        return HAL_ERROR;
+
+    // "job" is heap‑allocated with pvPortMalloc, so its lifetime extends beyond the function.
+    // That means the memory stays valid until the task frees it.
+    size_t alloc_size = sizeof(M24256WriteJob) + length - 1;
+    M24256WriteJob *job = static_cast<M24256WriteJob *>(pvPortMalloc(alloc_size));
+    if (job == nullptr)
+        return HAL_ERROR;
+
+    job->device = this;
+    job->address = address;
+    job->length = length;
+    memcpy(job->data, data, length); // copy sequence data to job buffer
+
+    if (xQueueSend(task_M24256_write_queue, &job, 0) != pdPASS)
+    {
+        vPortFree(job);
+        return HAL_BUSY;
+    }
+
+    return HAL_OK;
 }
 
 /**
@@ -190,4 +233,129 @@ HAL_StatusTypeDef M24256::massErase()
     }
     
     return HAL_OK;
+}
+
+HAL_StatusTypeDef M24256::massEraseAsync()
+{
+    task_M24256_start();
+
+    if (task_M24256_write_queue == nullptr)
+        return HAL_ERROR;
+
+    // "job" is heap‑allocated with pvPortMalloc, so its lifetime extends beyond the function.
+    // That means the memory stays valid until the task frees it.
+    size_t alloc_size = sizeof(M24256WriteJob) + M24256_TOTAL_SIZE - 1;
+    M24256WriteJob *job = static_cast<M24256WriteJob *>(pvPortMalloc(alloc_size));
+    if (job == nullptr)
+        return HAL_ERROR;
+    
+    job->device = this;
+    job->address = 0;
+    job->length = M24256_TOTAL_SIZE;
+    memset(job->data, 0xFF, M24256_TOTAL_SIZE);
+
+    if (xQueueSend(task_M24256_write_queue, &job, 0) != pdPASS)
+    {
+        vPortFree(job);
+        return HAL_BUSY;
+    }
+
+    return HAL_OK; // job is now enqueued, return immediately
+}
+
+/*
+Dedicated EEPROM write task
+Uses writeBufferAsync() to enqueue bulk writes. The task performs page-split writes using the I2C manager’s synchronous enqueue helper and enforces the per‑page write‑cycle delay so other I2C users can share the bus safely.
+
+Each page write is followed by vTaskDelay(M24256_WRITE_CYCLE_TIME_MS), matching the EEPROM’s required write‑cycle time.
+writeBufferAsync() now copies the payload into a heap‑allocated job and enqueues it, returning immediately with HAL_OK or HAL_BUSY.
+*/
+static void task_M24256_bulk_write(void *pvParameters)
+{
+    UNUSED(pvParameters);
+
+    if (task_M24256_write_queue == nullptr)
+    {
+        task_M24256_write_queue = xQueueCreate(2, sizeof(M24256WriteJob *));
+    }
+
+    while (1)
+    {
+        M24256WriteJob *job = nullptr;
+        if (xQueueReceive(task_M24256_write_queue, &job, portMAX_DELAY) != pdPASS || job == nullptr)
+            continue;
+
+        // job flags to track the status of the async write
+        job->device->asyncWriteInProgress = true;
+        job->device->asyncWriteFailure = false;
+        job->device->asyncWriteStatus = HAL_OK;
+        
+        uint16_t memAddress = job->address;
+        uint16_t remaining = job->length;
+        uint16_t dataIndex = 0;
+
+        while (remaining > 0)
+        {
+
+            uint8_t pageOffset = memAddress % M24256_PAGE_SIZE;
+            uint8_t pageRoom = M24256_PAGE_SIZE - pageOffset;
+            uint8_t chunk = (remaining < pageRoom) ? remaining : pageRoom;
+            if (chunk > M24256_PAGE_SIZE)
+                chunk = M24256_PAGE_SIZE;
+
+            uint8_t buffer[2 + M24256_PAGE_SIZE];
+            buffer[0] = static_cast<uint8_t>(memAddress >> 8);
+            buffer[1] = static_cast<uint8_t>(memAddress & 0xFF);
+            memcpy(&buffer[2], &job->data[dataIndex], chunk);
+
+            // Submit the I2C transaction and wait for it to complete
+            // Timeout is 100ms to allow for the EEPROM write cycle to complete
+            HAL_StatusTypeDef status = i2c_submit_sync_tx(job->device->i2c, job->device->address, buffer, 2 + chunk, pdMS_TO_TICKS(100));
+
+            // If the I2C transaction fails, break out of the loop
+            if (status != HAL_OK)
+            {
+                job->device->asyncWriteFailure = true;
+                job->device->asyncWriteStatus = status;
+                break;
+            }
+
+            // A small delay is required to allow for the M24256 internal write cycle to complete. 
+            // Issuing another write too quickly can cause the write to fail.
+            vTaskDelay(pdMS_TO_TICKS(M24256_WRITE_CYCLE_TIME_MS));
+
+            memAddress += chunk;
+            dataIndex += chunk;
+            remaining -= chunk;
+        }
+
+        job->device->asyncWriteInProgress = false;
+        
+        // notify the caller that the write is complete
+        if (job->device->writeCompleteCallback)
+            job->device->writeCompleteCallback();
+
+        vPortFree(job); // free the job from the heap
+    }
+}
+
+/**
+ * @brief Start the EEPROM write task
+ * 
+ * This function creates the EEPROM write task if it doesn't already exist.
+ * 
+ * @return void
+ */
+static void task_M24256_start()
+{
+    if (task_M24256_write_handle == nullptr)
+    {
+        xTaskCreate(
+            task_M24256_bulk_write,
+            "eeprom_wr",
+            configMINIMAL_STACK_SIZE + 128,
+            nullptr,
+            tskIDLE_PRIORITY + 1, // is this high or low priority?
+            &task_M24256_write_handle);
+    }
 }
