@@ -66,8 +66,7 @@ void task_I2C_manager(void *pvParameters)
 
                 if (current_req.waiter)
                 {
-                    current_req.result = pdFAIL;
-                    xTaskNotifyGive(current_req.waiter);
+                    xTaskNotify(current_req.waiter, 0u, eSetValueWithOverwrite);
                 }
                 continue;
             }
@@ -81,8 +80,8 @@ void task_I2C_manager(void *pvParameters)
             // notify waiting task (if any)
             if (current_req.waiter)
             {
-                current_req.result = i2c_tx_err ? pdFAIL : pdPASS;
-                xTaskNotifyGive(current_req.waiter);
+                uint32_t result = i2c_tx_err ? 0u : 1u;
+                xTaskNotify(current_req.waiter, result, eSetValueWithOverwrite);
             }
         }
         
@@ -150,17 +149,19 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 HAL_StatusTypeDef i2c_submit_sync_tx(I2C *instance, uint16_t addr, uint8_t *buf, uint16_t len, TickType_t timeout)
 {
     I2CRequest req{RequestType::Transmit, instance, addr, buf, len, xTaskGetCurrentTaskHandle(), pdFAIL};
-    if (xQueueSend(i2c_queue, &req, pdMS_TO_TICKS(2)) != pdPASS)
+    if (xQueueSend(i2c_queue, &req, pdMS_TO_TICKS(100)) != pdPASS)
     {
         return HAL_BUSY;
     }
 
-    if (ulTaskNotifyTake(pdTRUE, timeout) == 0)
+    // Calling task will block/wait until the I2C transaction is completed or timed out.
+    // If it returns 0, no notification arrived within timeout.
+    uint32_t notify_value = 0;
+    if (xTaskNotifyWait(0, 0xFFFFFFFF, &notify_value, timeout) == pdFALSE)
     {
         return HAL_TIMEOUT;
     }
-
-    return (req.result == pdPASS) ? HAL_OK : HAL_ERROR;
+    return (notify_value == 1u) ? HAL_OK : HAL_ERROR;
 }
 
 /**
@@ -182,12 +183,15 @@ HAL_StatusTypeDef i2c_submit_sync_rx(I2C *instance, uint16_t addr, uint8_t *buf,
         return HAL_BUSY;
     }
 
-    if (ulTaskNotifyTake(pdTRUE, timeout) == 0)
+    // Calling task will block/wait until the I2C transaction is completed or timed out.
+    // If it returns 0, no notification arrived within timeout.
+    uint32_t notify_value = 0;
+    if (xTaskNotifyWait(0, 0xFFFFFFFF, &notify_value, timeout) == pdFALSE)
     {
         return HAL_TIMEOUT;
     }
 
-    return (req.result == pdPASS) ? HAL_OK : HAL_ERROR;
+    return (notify_value == 1u) ? HAL_OK : HAL_ERROR;
 }
 
 /**
