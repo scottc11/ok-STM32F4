@@ -119,7 +119,7 @@ HAL_StatusTypeDef I2C::write(int address, uint8_t *data, int length, bool repeat
     return status;
 }
 
-int I2C::read(int address, uint8_t *data, int length, bool repeated /*=false*/)
+HAL_StatusTypeDef I2C::read(int address, uint8_t *data, int length, bool repeated /*=false*/)
 {
 
     // if (_mode == NonBlocking)

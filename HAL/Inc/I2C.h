@@ -43,7 +43,7 @@ public:
 
     void init();
     HAL_StatusTypeDef write(int address, uint8_t *data, int length, bool repeated = false);
-    int read(int address, uint8_t *data, int length, bool repeated = false);
+    HAL_StatusTypeDef read(int address, uint8_t *data, int length, bool repeated = false);
 
     // registry of instances, index 1..3 (0 unused)
     static I2C *instances[4];
