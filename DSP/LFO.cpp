@@ -105,7 +105,9 @@ void LFO::setWaveform(Waveform type)
  */
 void LFO::handleFrequencyControl(uint16_t value)
 {
-    this->setFrequency(ok_map<float>((float)value, 0.0f, 4095.0f, minFrequency, maxFrequency));
+    float ratio = maxFrequency / minFrequency;
+    float t = static_cast<float>(value) / 4095.0f;
+    this->setFrequency(minFrequency * powf(ratio, t));
 }
 
 /**
