@@ -109,8 +109,6 @@ void LFO::setWaveform(Waveform type)
 {
     waveform = type;
 }
-<<<<<<< Updated upstream
-=======
 
 void LFO::triggerSampleHold()
 {
@@ -145,7 +143,6 @@ void LFO::resetToZero()
  * @param value 
  * @return float 
  */
->>>>>>> Stashed changes
 void LFO::handleFrequencyControl(uint16_t value)
 {
     if (minFrequency > 0.0f && maxFrequency > minFrequency) {
