@@ -1,4 +1,5 @@
 #include "LFO.h"
+#include "random.h"
 
 /**
  * @brief advance the LFO waveform by one sample and return the current value
@@ -7,6 +8,16 @@
  */
 float LFO::update()
 {
+    if (waveform == Waveform::SAMPLE_HOLD)
+    {
+        return value;
+    }
+    if (resetHoldZero)
+    {
+        resetHoldZero = false;
+        value = 0.0f;
+        return value;
+    }
     // the frequency of the waveform is determined by the size of the steps.
     phase += phaseStepAmount;
 
@@ -43,6 +54,8 @@ float LFO::update()
     case Waveform::SINE:
     default:
         value = arm_sin_f32(phase) * amplitude; // note: try using the arm_sin_f32.c
+        break;
+    case Waveform::SAMPLE_HOLD:
         break;
     }
     return value;
@@ -96,6 +109,43 @@ void LFO::setWaveform(Waveform type)
 {
     waveform = type;
 }
+<<<<<<< Updated upstream
+=======
+
+void LFO::triggerSampleHold()
+{
+    if (waveform != Waveform::SAMPLE_HOLD)
+    {
+        return;
+    }
+    const float t = static_cast<float>(ok_random_uint16()) / 65535.0f;
+    value = ((t * 2.0f) - 1.0f) * amplitude;
+}
+
+void LFO::resetToZero()
+{
+    if (waveform == Waveform::SAW_RISING || waveform == Waveform::SAW_FALLING)
+    {
+        phase = M_PI; // zero crossing for saws
+    }
+    else
+    {
+        // For inverted output, reset sine to the zero crossing with negative slope
+        // so the analog output starts positive after inversion.
+        phase = M_PI;
+        resetHoldZero = true;
+    }
+    halfComplete = (phase >= M_PI);
+    value = 0.0f;
+}
+
+/**
+ * @brief Set the frequency of the LFO based on a 12-bit value
+ * 
+ * @param value 
+ * @return float 
+ */
+>>>>>>> Stashed changes
 void LFO::handleFrequencyControl(uint16_t value)
 {
     if (minFrequency > 0.0f && maxFrequency > minFrequency) {

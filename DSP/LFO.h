@@ -17,6 +17,7 @@ public:
     {
         SINE = 0,
         SAW_RISING,
+        SAMPLE_HOLD,
         SAW_FALLING
     };
 
@@ -38,6 +39,7 @@ public:
     float amplitude;       // the amplitude of the waveform (0.0 to 1.0)
     uint16_t sampleRate;   // usually the sample rate of the DAC
     bool halfComplete;     // flag to indicate if the waveform has completed half of its cycle
+    bool resetHoldZero = false; // force a one-sample 0 output after reset
     Waveform waveform;  // currently selected waveform
 
     float minFrequency = 0.2f;
@@ -54,6 +56,8 @@ public:
     void setFrequency(float _frequency);
     void setAmplitude(float _amplitude);
     void setWaveform(Waveform type);
+    void triggerSampleHold();
+    void resetToZero();
 
     // helpers
     void handleFrequencyControl(uint16_t value);
