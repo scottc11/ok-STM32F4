@@ -98,6 +98,33 @@ void LFO::setWaveform(Waveform type)
 }
 
 /**
+ * @brief Set the frequency range of the LFO waveform
+ * 
+ * @param range 
+ */
+void LFO::setFrequencyRange(Range range)
+{
+    this->range = range;
+    switch (range)
+    {
+    case Range::SLOW:
+        minFrequency = 0.02f;
+        maxFrequency = 1.5f;
+        break;
+    case Range::MEDIUM:
+        minFrequency = 0.2f;
+        maxFrequency = 15.0f;
+        break;
+    case Range::FAST:
+        minFrequency = 2.0f;
+        maxFrequency = 150.0f;
+        break;
+    default:
+        break;
+    }
+}
+
+/**
  * @brief Set the frequency of the LFO based on a 12-bit value
  * 
  * @param value 

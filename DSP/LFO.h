@@ -20,6 +20,13 @@ public:
         SAW_FALLING
     };
 
+    enum Range
+    {
+        SLOW = 0,
+        MEDIUM,
+        FAST
+    };
+
     LFO()
     {
         frequency = 1.0f;
@@ -28,6 +35,7 @@ public:
         sampleRate = 44100;
         halfComplete = false;
         waveform = SINE;
+        setFrequencyRange(Range::MEDIUM);
     }
 
     float value; // the most recently processed value of the waveform
@@ -39,6 +47,7 @@ public:
     uint16_t sampleRate;   // usually the sample rate of the DAC
     bool halfComplete;     // flag to indicate if the waveform has completed half of its cycle
     Waveform waveform;  // currently selected waveform
+    Range range;        // currently selected frequency range
 
     float minFrequency = 0.2f;
     float maxFrequency = 15.0f;
@@ -54,6 +63,7 @@ public:
     void setFrequency(float _frequency);
     void setAmplitude(float _amplitude);
     void setWaveform(Waveform type);
+    void setFrequencyRange(Range range);
 
     // helpers
     void handleFrequencyControl(uint16_t value);
