@@ -1,12 +1,40 @@
 #include "LFO.h"
 
 /**
+ * @brief reset the LFO waveform to the beginning of the cycle
+ */
+void LFO::reset()
+{
+    phase = 0.0f;
+    halfComplete = false;
+}
+
+/**
+ * @brief trigger the sample hold waveform with a 16-bit sample value
+ * 
+ * @param sample 16-bit sample value
+ */
+void LFO::triggerSampleHold(uint16_t sample)
+{
+    if (waveform != Waveform::SAMPLE_HOLD)
+    {
+        return;
+    }
+    const float t = static_cast<float>(sample) / 65535.0f;
+    value = ((t * 2.0f) - 1.0f) * amplitude;
+}
+
+/**
  * @brief advance the LFO waveform by one sample and return the current value
  * 
  * @return float 
  */
 float LFO::update()
 {
+    if (waveform == Waveform::SAMPLE_HOLD)
+    {
+        return value;
+    }
     // the frequency of the waveform is determined by the size of the steps.
     phase += phaseStepAmount;
 

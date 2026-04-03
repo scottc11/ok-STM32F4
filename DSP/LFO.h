@@ -17,7 +17,8 @@ public:
     {
         SINE = 0,
         SAW_RISING,
-        SAW_FALLING
+        SAW_FALLING,
+        SAMPLE_HOLD
     };
 
     enum Range
@@ -64,6 +65,9 @@ public:
     void setAmplitude(float _amplitude);
     void setWaveform(Waveform type);
     void setFrequencyRange(Range range);
+
+    void reset();
+    void triggerSampleHold(uint16_t sample);
 
     // helpers
     void handleFrequencyControl(uint16_t value);
