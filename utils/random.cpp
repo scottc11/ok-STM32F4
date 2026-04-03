@@ -63,3 +63,31 @@ bool ok_random_coin_flip(uint32_t seed)
     ok_random_seed(seed);
     return ok_random_uint32() % 2 == 0;
 }
+
+/**
+ * @brief Return a boolean, with probability of success (true) given by the probability parameter.
+ * Other know as a "Bernoulli trial". A Bernoulli trial is a random experiment with two possible outcomes: success or failure.
+ * The probability of success is given by the probability parameter.
+ * The probability of failure is 1 - probability.
+ * The result of the Bernoulli trial is a boolean value.
+ *
+ * @param probability 0..4095
+ * @return true if success, false if failure
+ */
+uint8_t ok_random_bernoulli_gate(uint16_t probability) {
+    if (probability == 0u)
+    {
+        return 0u;
+    }
+
+    if (probability >= 4095u)
+    {
+        return 1u;
+    }
+
+    // Compare in integer domain to avoid runtime division:
+    // random/65535 <= probability/4095
+    uint32_t lhs = static_cast<uint32_t>(ok_random_uint16()) * 4095u;
+    uint32_t rhs = static_cast<uint32_t>(probability) * 65535u;
+    return (lhs <= rhs) ? 1u : 0u;
+}
