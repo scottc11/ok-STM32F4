@@ -227,10 +227,12 @@ void LFO::setSyncRate(SyncRate rate)
 
 void LFO::updateFrequencyFromTempoSync()
 {
-    const float beatsPerCycle = syncRateBeatsPerCycle();
-    const float beatsPerSecond = syncBpm / 60.0f;
-    const float syncedHz = beatsPerSecond / beatsPerCycle;
-    setFrequency(syncedHz);
+    if (tempoSync) {
+        const float beatsPerCycle = syncRateBeatsPerCycle();
+        const float beatsPerSecond = syncBpm / 60.0f;
+        const float syncedHz = beatsPerSecond / beatsPerCycle;
+        setFrequency(syncedHz);
+    }
 }
 
 float LFO::syncRateBeatsPerCycle() const
