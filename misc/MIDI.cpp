@@ -30,6 +30,13 @@ uint8_t MIDI::getChannel(uint8_t status)
 bool MIDI::processByte(uint8_t byte)
 {
     static uint8_t index = 0;
+    if (byte >= 0xF8)
+    {
+        // System realtime messages are 1-byte messages and can arrive at any time.
+        BUFFER_IN[0] = byte;
+        return true;
+    }
+
     if (byte >= 0x80)
     {
         BUFFER_IN[0] = byte;
@@ -50,9 +57,41 @@ bool MIDI::processByte(uint8_t byte)
 
 void MIDI::parseMessage(uint8_t *data)
 {
-    uint8_t channel = getChannel(data[0]);
-    uint8_t event = data[0] & 0xF0;
-    if (data[0] >= 0x80)
+    uint8_t status = data[0];
+    uint8_t channel = getChannel(status);
+
+    if (status >= 0xF8)
+    {
+        switch (status)
+        {
+        case MIDIstatus::CLOCK_START:
+            if (clockStartCallback)
+                clockStartCallback();
+            break;
+
+        case MIDIstatus::CLOCK_STOP:
+            if (clockStopCallback)
+                clockStopCallback();
+            break;
+
+        case MIDIstatus::CLOCK_CONTINUE:
+            if (clockContinueCallback)
+                clockContinueCallback();
+            break;
+
+        case MIDIstatus::CLOCK_TICK:
+            if (clockTickCallback)
+                clockTickCallback();
+            break;
+
+        default:
+            break;
+        }
+        return;
+    }
+
+    uint8_t event = status & 0xF0;
+    if (status >= 0x80)
     {
         switch (event)
         {
@@ -86,7 +125,7 @@ void MIDI::parseMessage(uint8_t *data)
             if (pitchBendCallback)
                 pitchBendCallback(channel, (data[2] << 7) | data[1]);
             break;
-            
+
         default:
             break;
         }

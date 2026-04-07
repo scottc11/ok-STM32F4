@@ -12,7 +12,12 @@ enum MIDIstatus
     CONTROL_CHANGE = 0xB0,          // This message is sent when a controller value changes. Controllers include devices such as pedals and levers. Controller numbers 120-127 are reserved as “Channel Mode Messages” (below). (ccccccc) is the controller number (0-119). (vvvvvvv) is the controller value (0-127).
     PROGRAM_CHANGE = 0xC0,          // This message sent when the patch number changes. (ppppppp) is the new program number.
     CHANNEL_PRESSURE = 0xD0,        // This message is most often sent by pressing down on the key after it “bottoms out”. This message is different from polyphonic after-touch. Use this message to send the single greatest pressure value (of all the current depressed keys).
-    PITCH_BEND = 0xE0               // This message is sent to indicate a change in the pitch bender (wheel or lever, typically). The pitch bender is measured by a fourteen bit value. Center (no pitch change) is 2000H. Sensitivity is a function of the receiver, but may be set using RPN 0. (lllllll) are the least significant 7 bits. (mmmmmmm) are the most significant 7 bits.
+    PITCH_BEND = 0xE0,               // This message is sent to indicate a change in the pitch bender (wheel or lever, typically). The pitch bender is measured by a fourteen bit value. Center (no pitch change) is 2000H. Sensitivity is a function of the receiver, but may be set using RPN 0. (lllllll) are the least significant 7 bits. (mmmmmmm) are the most significant 7 bits.
+    CLOCK_TICK = 0xF8,               // Timing clock. Sent 24 times per quarter note.
+    CLOCK_START = 0xFA,              // Start.
+    CLOCK_CONTINUE = 0xFB,           // Continue.
+    CLOCK_STOP = 0xFC,               // Stop.
+    ACTIVE_SENSING = 0xFE            // Optional keepalive.
 };
 
 class MIDI {
@@ -32,6 +37,10 @@ class MIDI {
         void attachNoteOnCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOnCallback = callback; }
         void attachNoteOffCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOffCallback = callback; }
         void attachPitchBendCallback(Callback<void(uint8_t channel, uint16_t pitch)> callback) { pitchBendCallback = callback; }
+        void attachClockStartCallback(Callback<void()> callback) { clockStartCallback = callback; }
+        void attachClockStopCallback(Callback<void()> callback) { clockStopCallback = callback; }
+        void attachClockContinueCallback(Callback<void()> callback) { clockContinueCallback = callback; }
+        void attachClockTickCallback(Callback<void()> callback) { clockTickCallback = callback; }
 
         static uint8_t BUFFER_IN[3];
 
@@ -39,6 +48,9 @@ class MIDI {
         Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOnCallback;
         Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOffCallback;
         Callback<void(uint8_t channel, uint16_t pitch)> pitchBendCallback;
-        
+        Callback<void()> clockStartCallback;
+        Callback<void()> clockStopCallback;
+        Callback<void()> clockContinueCallback;
+        Callback<void()> clockTickCallback;
         uint8_t getChannel(uint8_t status);
 };
