@@ -33,6 +33,8 @@ class MIDI {
 
         bool processByte(uint8_t byte);
         void parseMessage(uint8_t *data);
+        void updateDetectedBPM(uint32_t timestampUs);
+        void resetDetectedBPM();
         
         void attachNoteOnCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOnCallback = callback; }
         void attachNoteOffCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOffCallback = callback; }
@@ -43,6 +45,7 @@ class MIDI {
         void attachClockTickCallback(Callback<void()> callback) { clockTickCallback = callback; }
 
         static uint8_t BUFFER_IN[3];
+        float detectedBPM = 0.0f;
 
     private:
         Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOnCallback;
@@ -53,4 +56,9 @@ class MIDI {
         Callback<void()> clockContinueCallback;
         Callback<void()> clockTickCallback;
         uint8_t getChannel(uint8_t status);
+
+        uint32_t lastClockTimestampUs = 0;
+        uint32_t clockIntervalAccumUs = 0;
+        uint8_t clockIntervalCount = 0;
+        bool hasClockTimestamp = false;
 };
