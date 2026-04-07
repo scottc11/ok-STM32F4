@@ -28,6 +28,18 @@ public:
         FAST
     };
 
+    enum class SyncRate : uint8_t
+    {
+        WHOLE = 0,            // 1/1
+        THREE_QUARTERS,       // 3/4
+        HALF,                 // 1/2
+        QUARTER,              // 1/4
+        QUARTER_TRIPLET,      // 1/4T
+        EIGHTH,               // 1/8
+        EIGHTH_TRIPLET,       // 1/8T
+        SIXTEENTH,            // 1/16
+    };
+
     LFO()
     {
         frequency = 1.0f;
@@ -37,6 +49,9 @@ public:
         halfComplete = false;
         waveform = SINE;
         setFrequencyRange(Range::MEDIUM);
+        syncRate = SyncRate::WHOLE;
+        syncBpm = 120.0f;
+        tempoSync = false;
     }
 
     float value; // the most recently processed value of the waveform
@@ -47,9 +62,12 @@ public:
     float amplitude;       // the amplitude of the waveform (0.0 to 1.0)
     uint16_t sampleRate;   // usually the sample rate of the DAC
     bool halfComplete;     // flag to indicate if the waveform has completed half of its cycle
-    Waveform waveform;  // currently selected waveform
-    Range range;        // currently selected frequency range
-
+    Waveform waveform;     // currently selected waveform
+    Range range;           // currently selected frequency range
+    SyncRate syncRate;     // currently selected sync rate
+    float syncBpm;         // the BPM to sync the LFO to
+    bool tempoSync;        // flag to indicate if the LFO is synced a tempo
+    
     float minFrequency = 0.2f;
     float maxFrequency = 15.0f;
     float minAmplitude = 0.0f;
@@ -65,6 +83,14 @@ public:
     void setAmplitude(float _amplitude);
     void setWaveform(Waveform type);
     void setFrequencyRange(Range range);
+    
+    // tempo sync
+    void enableTempoSync();
+    void disableTempoSync();
+    void setSyncRate(SyncRate rate);
+    void setSyncBPM(float value);
+    void updateFrequencyFromTempoSync();
+    float syncRateBeatsPerCycle() const;
 
     void reset();
     void triggerSampleHold(uint16_t sample);

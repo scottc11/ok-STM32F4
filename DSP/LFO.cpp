@@ -160,9 +160,16 @@ void LFO::setFrequencyRange(Range range)
  */
 void LFO::handleFrequencyControl(uint16_t value)
 {
-    float ratio = maxFrequency / minFrequency;
-    float t = static_cast<float>(value) / 4095.0f;
-    this->setFrequency(minFrequency * powf(ratio, t));
+    if (tempoSync)
+    {
+        const uint8_t syncRateCount = static_cast<uint8_t>(LFO::SyncRate::SIXTEENTH) + 1u;
+        const uint8_t syncRateIndex = static_cast<uint8_t>((value * syncRateCount) / 4096u);
+        setSyncRate(static_cast<LFO::SyncRate>(syncRateIndex));
+    } else {
+        float ratio = maxFrequency / minFrequency;
+        float t = static_cast<float>(value) / 4095.0f;
+        this->setFrequency(minFrequency * powf(ratio, t));
+    }
 }
 
 /**
@@ -192,4 +199,52 @@ void LFO::setMinAmplitude(float value) {
 
 void LFO::setMaxAmplitude(float value) {
     maxAmplitude = value;
+}
+
+void LFO::enableTempoSync()
+{
+    tempoSync = true;
+    updateFrequencyFromTempoSync();
+}
+
+void LFO::disableTempoSync()
+{
+    tempoSync = false;
+    this->setFrequency(frequency);
+}
+
+void LFO::setSyncBPM(float value)
+{
+    syncBpm = value;
+    updateFrequencyFromTempoSync();
+}
+
+void LFO::setSyncRate(SyncRate rate)
+{
+    syncRate = rate;
+    updateFrequencyFromTempoSync();
+}
+
+void LFO::updateFrequencyFromTempoSync()
+{
+    const float beatsPerCycle = syncRateBeatsPerCycle();
+    const float beatsPerSecond = syncBpm / 60.0f;
+    const float syncedHz = beatsPerSecond / beatsPerCycle;
+    setFrequency(syncedHz);
+}
+
+float LFO::syncRateBeatsPerCycle() const
+{
+    switch (syncRate)
+    {
+    case SyncRate::WHOLE:             return 4.0f;        // 1/1
+    case SyncRate::THREE_QUARTERS:    return 3.0f;        // 3/4
+    case SyncRate::HALF:              return 2.0f;        // 1/2
+    case SyncRate::QUARTER:           return 1.0f;        // 1/4
+    case SyncRate::QUARTER_TRIPLET:   return 1.0f / 3.0f; // 1/4T
+    case SyncRate::EIGHTH:            return 0.5f;        // 1/8
+    case SyncRate::EIGHTH_TRIPLET:    return 1.0f / 3.0f; // 1/8T
+    case SyncRate::SIXTEENTH:         return 0.25f;       // 1/16
+    default:                          return 1.0f;
+    }
 }
