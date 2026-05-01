@@ -300,6 +300,8 @@ void Metronome::handleInputCaptureCallback()
                 bpmExceededCallback(capturePeriod);
         }
     } else {
+        bpmExceededCount = 0;
+        // check if BPM has stabilized
         if (bpmExceeded)
         {
             bpmExceeded = false;
