@@ -170,8 +170,10 @@ HAL_StatusTypeDef M24256::readBufferAsync(uint16_t memAddress, uint8_t *buffer, 
     write_buffer[1] = (uint8_t)(memAddress & 0xFF); // LSB of memory address
 
     i2c->write(address, write_buffer, 2);
-    vTaskDelay(pdMS_TO_TICKS(M24256_WRITE_CYCLE_TIME_MS));
-    return OK_I2C_NON_BLOCKING_RECEIVE(i2c, this->address, buffer, length, 0);
+
+    // submit an asynchronous receive request
+    I2CRequest req{RequestType::Receive, i2c, this->address, buffer, length, nullptr, pdFAIL};
+    return (i2c_submit_async(req) == pdPASS) ? HAL_OK : HAL_BUSY;
 }
 
 /**
