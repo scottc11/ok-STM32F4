@@ -44,6 +44,14 @@ void M24256::writePage(uint16_t address, uint8_t *data, uint8_t length)
     (void)writeBuffer(address, data, length);
 }
 
+/**
+ * @brief Write a buffer of data to the EEPROM (blocking)
+ * 
+ * @param address the address to write to
+ * @param data the data to write
+ * @param length the length of the data to write
+ * @return HAL_StatusTypeDef status of the operation
+ */
 HAL_StatusTypeDef M24256::writeBuffer(uint16_t address, const uint8_t *data, uint16_t length)
 {
     // Nothing to write or invalid pointer – treat as success and return
@@ -91,6 +99,14 @@ HAL_StatusTypeDef M24256::writeBuffer(uint16_t address, const uint8_t *data, uin
     return status;
 }
 
+/**
+ * @brief Write a buffer of data to the EEPROM (non-blocking). This function is used to write data to the EEPROM in the background.
+ * 
+ * @param address the address to write to
+ * @param data the data to write (pointer to the data)
+ * @param length the length of the data to write (number of bytes)
+ * @return HAL_StatusTypeDef status of the operation (HAL_OK if successful, HAL_ERROR if there was an error)
+ */
 HAL_StatusTypeDef M24256::writeBufferAsync(uint16_t address, const uint8_t *data, uint16_t length)
 {
     if (length == 0 || data == nullptr)
@@ -110,7 +126,7 @@ HAL_StatusTypeDef M24256::writeBufferAsync(uint16_t address, const uint8_t *data
     job->device = this;
     job->address = address;
     job->length = length;
-    memcpy(job->data, data, length); // copy sequence data to job buffer
+    memcpy(job->data, data, length); // copy data to job buffer
 
     if (xQueueSend(task_M24256_write_queue, &job, 0) != pdPASS)
     {
