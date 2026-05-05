@@ -44,6 +44,7 @@ public:
     void init();
     HAL_StatusTypeDef write(int address, uint8_t *data, int length, bool repeated = false);
     HAL_StatusTypeDef read(int address, uint8_t *data, int length, bool repeated = false);
+    bool isDeviceReady(uint8_t address, uint8_t retries = 3, uint32_t timeout_ms = 10);
 
     // registry of instances, index 1..3 (0 unused)
     static I2C *instances[4];

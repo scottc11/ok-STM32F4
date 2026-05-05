@@ -143,6 +143,22 @@ HAL_StatusTypeDef I2C::read(int address, uint8_t *data, int length, bool repeate
     return status;
 }
 
+/**
+ * @brief Check if the I2C device is ready by sending device address on the bus and checking for an ACK response.
+ * 
+ * @param address the address of the device
+ * @param retries the number of retries
+ * @param timeout_ms the timeout in milliseconds
+ * @return true if the device is ready, false otherwise
+ */
+bool I2C::isDeviceReady(uint8_t address, uint8_t retries, uint32_t timeout_ms)
+{
+    mutex.lock();
+    HAL_StatusTypeDef status = HAL_I2C_IsDeviceReady(&_hi2c, address, retries, timeout_ms);
+    mutex.unlock();
+    return status == HAL_OK;
+}
+
 I2C_TypeDef *I2C::get_i2c_instance(Instance instance)
 {
     switch (instance)

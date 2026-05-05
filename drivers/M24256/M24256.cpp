@@ -15,8 +15,8 @@ static void task_M24256_start();
 
 void M24256::init()
 {
-    // isConnected = i2c->isDeviceReady(address);
-    if (!isConnected)
+    connected = i2c->isDeviceReady(address, 3, 10);
+    if (!connected)
     {
         OK_ERROR_HANDLER(HAL_ERROR, "M24256 not connected");
     }

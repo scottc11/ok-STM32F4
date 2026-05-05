@@ -27,7 +27,7 @@ public:
     uint8_t address;
     I2C *i2c;
     DigitalOut writeControlPin;
-    bool isConnected = false;
+    bool connected = false;
     bool asyncWriteInProgress = false;
     bool asyncWriteFailure = false;
     HAL_StatusTypeDef asyncWriteStatus = HAL_OK;
@@ -35,6 +35,7 @@ public:
     Callback<void()> writeCompleteCallback; // callback function to notify the caller that the write is complete
 
     void init();
+    bool isConnected() { return connected; };
     
     uint8_t readByte(uint16_t memAddress);
     uint16_t readByte16(uint16_t memAddress);
