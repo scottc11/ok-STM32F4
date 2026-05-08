@@ -95,24 +95,6 @@ uint8_t tim_get_capture_prescaler(TIM_HandleTypeDef *htim, uint32_t channel)
 }
 
 /**
- * @brief Calculate the frequency of the input signal
- * 
- * @param htim
- * @param channel
- * @param captureValues
- * @param captureCount
- */
-float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel)
-{
-    uint32_t capturePrescaler = tim_get_capture_prescaler(htim, channel);
-    uint16_t prescaler = htim->Init.Prescaler;
-    uint32_t APBx_freq = tim_get_APBx_freq(htim);
-    uint32_t capture = __HAL_TIM_GetCompare(htim, channel) / capturePrescaler;
-    float frequency = static_cast<float>(APBx_freq) / (float)((capture * (prescaler + 1)));
-    return frequency;
-}
-
-/**
  * @brief Calculate the period between two capture readings, handling the overflow case
  * 
  * @param htim pointer to the timer handle
@@ -132,6 +114,24 @@ uint32_t tim_get_capture_period(TIM_HandleTypeDef *htim, uint32_t current, uint3
     {
         return (htim->Instance->ARR - previous) + current + 1;
     }
+}
+
+/**
+ * @brief Calculate the frequency of the input signal
+ *
+ * @param htim
+ * @param channel
+ * @param captureValues
+ * @param captureCount
+ */
+float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel)
+{
+    uint32_t capturePrescaler = tim_get_capture_prescaler(htim, channel);
+    uint16_t prescaler = htim->Init.Prescaler;
+    uint32_t APBx_freq = tim_get_APBx_freq(htim);
+    uint32_t capture = __HAL_TIM_GetCompare(htim, channel) / capturePrescaler;
+    float frequency = static_cast<float>(APBx_freq) / (float)((capture * (prescaler + 1)));
+    return frequency;
 }
 
 /**

@@ -22,6 +22,7 @@ void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, ui
 
 uint8_t tim_get_capture_prescaler(TIM_HandleTypeDef *htim, uint32_t channel);
 
+float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel);
 float tim_calculate_capture_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t currCapture, uint32_t prevCapture);
 
 uint32_t tim_get_capture_period(TIM_HandleTypeDef *htim, uint32_t current, uint32_t previous);
