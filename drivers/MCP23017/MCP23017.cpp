@@ -8,7 +8,12 @@
 #include "MCP23017.h"
 
 void MCP23017::init(void) {
-	
+	connected = i2c->isDeviceReady(address, 3, 10);
+
+	if (!connected) {
+		OK_ERROR_HANDLER(HAL_ERROR, "MCP23017 not connected");
+	}
+
 	// init config, mirror interrupts
 	setConfig(0b01000000);
 

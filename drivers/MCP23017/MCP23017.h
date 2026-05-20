@@ -43,6 +43,7 @@ class MCP23017 {
 
 	I2C * i2c;
 	char address;
+	bool connected;
 	uint16_t currPinStates;
 	uint16_t prevPinStates;
 
