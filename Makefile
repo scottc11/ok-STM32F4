@@ -16,6 +16,7 @@ $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+$(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_iwdg.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
