@@ -13,6 +13,9 @@
 #define PPQN_8th (PPQN / 2)
 #define PPQN_16th (PPQN / 4)
 
+#define BPM_MAX 240
+#define BPM_MIN 40
+
 #define MAX_TICKS_PER_PULSE 34299 // (40 BPM)  MAX TIM4 tickers per pulse
 #define MIN_TICKS_PER_PULSE 5716  // (240 BPM) MIN TIM4 tickers per pulse
 
@@ -29,6 +32,7 @@ extern TIM_HandleTypeDef htim4; // 16-bit timer
 class Metronome
 {
 public:
+    float bpm;              // the current BPM
     int pulse;              // the current PPQN
     uint8_t step;           // current step. Will never exceed value of stepsPerBar
     uint16_t ticksPerStep;  // how many TIM2 ticks per one step / quarter note
@@ -70,6 +74,7 @@ public:
         instance = this;
         capturePin = _capturePin;
         captureChannel = _captureChannel;
+        bpm = 120;
         ticksPerStep = 11129;
         ticksPerPulse = ticksPerStep / PPQN;
         stepsPerBar = 4;
@@ -85,6 +90,7 @@ public:
     void stop();
     void reset();
     void setBPM(float bpm);
+    float getBPM();
     void setInputNoteDivision(InputNoteDivision division);
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();

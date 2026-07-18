@@ -63,19 +63,34 @@ void Metronome::reset()
  */
 void Metronome::setBPM(float bpm)
 {
-    
+    if (bpm > BPM_MAX) {
+        bpm = BPM_MAX;
+    } else if (bpm < BPM_MIN) {
+        bpm = BPM_MIN;
+    }
+
+    this->bpm = bpm;
+
     uint32_t timerClockFrequency = tim_get_APBx_freq(&htim4);    // Get the timer clock bus frequency
     uint32_t prescaler = 100;                                    // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
     uint32_t counterFrequency = timerClockFrequency / (prescaler + 1); // Calculate the counter frequency
 
     // Calculate the ticks per beat
-    uint32_t ticksPerBeat = counterFrequency / (bpm * PPQN / 60);
+    uint32_t ticksPerBeat = counterFrequency / (this->bpm * PPQN / 60);
 
     // Configure the timer period
     __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
     __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
 }
 
+/**
+ * @brief Get the BPM of the metronome
+ * @return float
+ */
+float Metronome::getBPM()
+{
+    return bpm;
+}
 
 
 /**
