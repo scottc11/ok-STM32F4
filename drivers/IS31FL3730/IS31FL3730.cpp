@@ -135,6 +135,13 @@ void IS31FL3730::setPWMRegister(uint8_t pwm) {
  * 0101 65mA
  * 0110 70mA
  * 0111 75mA
+ * 1000 5mA
+ * 1001 10mA
+ * 1010 15mA
+ * 1011 20mA
+ * 1100 25mA
+ * 1101 30mA
+ * 1110 35mA
  *
  */
 void IS31FL3730::setLightingEffectRegister(uint8_t ags, uint8_t cs)
