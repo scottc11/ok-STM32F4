@@ -32,6 +32,16 @@ extern TIM_HandleTypeDef htim4; // 16-bit timer
 class Metronome
 {
 public:
+
+    enum class Mode : uint8_t {
+        EXTERNAL,    // follows an external clock signal (square wave)
+        INTERNAL, // internal clock (timer overflow)
+        MIDI,  // MIDI clock
+        LINK,  // ableton link
+        MANUAL // app manually calls tick()
+    };
+
+    Mode mode;
     float bpm;              // the current BPM
     int pulse;              // the current PPQN
     uint8_t step;           // current step. Will never exceed value of stepsPerBar
@@ -74,6 +84,7 @@ public:
         instance = this;
         capturePin = _capturePin;
         captureChannel = _captureChannel;
+        mode = Mode::INTERNAL;
         bpm = 120;
         ticksPerStep = 11129;
         ticksPerPulse = ticksPerStep / PPQN;
@@ -86,11 +97,13 @@ public:
     void initTIM2(uint16_t prescaler, uint32_t period);
     void initTIM4(uint16_t prescaler, uint16_t period);
 
+    void tick();
     void start();
     void stop();
     void reset();
     void setBPM(float bpm);
     float getBPM();
+    void setMode(Mode mode);
     void setInputNoteDivision(InputNoteDivision division);
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();

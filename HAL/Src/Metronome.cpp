@@ -12,16 +12,46 @@ void Metronome::init()
     this->pulse = 0;
 }
 
+void Metronome::setMode(Mode mode)
+{
+    this->mode = mode;
+    HAL_StatusTypeDef status;
+    status = HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
+    OK_ERROR_HANDLER(status, "HAL_TIM_IC_Stop_IT");
+    status = HAL_TIM_Base_Stop_IT(&htim4);
+    OK_ERROR_HANDLER(status, "HAL_TIM_Base_Stop_IT");
+    switch (mode)
+    {
+        case Mode::EXTERNAL:
+            // start TIM2
+            __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, TIM_ICPSC_DIV1);
+            status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
+            OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
+            status = HAL_TIM_Base_Start_IT(&htim4);
+            OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
+            break;
+        case Mode::INTERNAL:
+            // start TIM4
+            status = HAL_TIM_Base_Start_IT(&htim4);
+            OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
+            break;
+        case Mode::MIDI:
+            // external midi handler will call tick()
+            break;
+        case Mode::LINK:
+            // external link handler will call tick()
+            break;
+        case Mode::MANUAL:
+            // app manually calls tick()
+            break;
+    }
+}
+
 void Metronome::start()
 {
     this->reset();
     running = true;
-    HAL_StatusTypeDef status;
-    __HAL_TIM_SET_ICPRESCALER(&htim2, TIM_CHANNEL_3, TIM_ICPSC_DIV1);
-    status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
-    OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
-    status = HAL_TIM_Base_Start_IT(&htim4);
-    OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
+    this->setMode(mode);
 }
 
 void Metronome::stop() {
@@ -365,11 +395,14 @@ void Metronome::disableInputCaptureISR()
 }
 
 /**
- * @brief this callback gets called everytime TIM4 overflows.
- * Increments pulse counter
+ * @brief Handle the clock tick (pulse increment and step handling)
+ * 
+ * NOTE: Function usually called in interrupt context.
  */
-void Metronome::handleOverflowCallback()
-{
+void Metronome::tick() {
+
+    if (running == false) return;
+
     if (ppqnCallback)
         ppqnCallback(pulse); // when clock inits, this ensures the 0ith pulse will get handled
 
@@ -386,18 +419,22 @@ void Metronome::handleOverflowCallback()
     }
     else
     {
-        if (externalInputMode)
-        {
-            // external input will reset pulse to 0 and resume TIM4 in input capture callback
+        pulse = 0;
+        handleStep();
+
+        if (externalInputMode) {
             __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs
-            handleStep();
-        }
-        else
-        {
-            pulse = 0;
-            handleStep();
         }
     }
+}
+
+/**
+ * @brief this callback gets called everytime TIM4 overflows.
+ * Increments pulse counter
+ */
+void Metronome::handleOverflowCallback()
+{
+    this->tick();
 }
 
 void Metronome::handleTransportInterruptPPQN()
