@@ -15,14 +15,19 @@ void Metronome::init()
 void Metronome::setMode(Mode mode)
 {
     this->mode = mode;
+    
+    // reset everything
     HAL_StatusTypeDef status;
     status = HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     OK_ERROR_HANDLER(status, "HAL_TIM_IC_Stop_IT");
     status = HAL_TIM_Base_Stop_IT(&htim4);
     OK_ERROR_HANDLER(status, "HAL_TIM_Base_Stop_IT");
+    externalInputMode = false;
+
     switch (mode)
     {
         case Mode::EXTERNAL:
+            externalInputMode = true;
             // start TIM2
             __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, TIM_ICPSC_DIV1);
             status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
@@ -101,16 +106,18 @@ void Metronome::setBPM(float bpm)
 
     this->bpm = bpm;
 
-    uint32_t timerClockFrequency = tim_get_APBx_freq(&htim4);    // Get the timer clock bus frequency
-    uint32_t prescaler = 100;                                    // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
-    uint32_t counterFrequency = timerClockFrequency / (prescaler + 1); // Calculate the counter frequency
+    if (mode == Mode::INTERNAL) {
+        uint32_t timerClockFrequency = tim_get_APBx_freq(&htim4);          // Get the timer clock bus frequency
+        uint32_t prescaler = 100;                                          // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
+        uint32_t counterFrequency = timerClockFrequency / (prescaler + 1); // Calculate the counter frequency
 
-    // Calculate the ticks per beat
-    uint32_t ticksPerBeat = counterFrequency / (this->bpm * PPQN / 60);
+        // Calculate the ticks per beat
+        uint32_t ticksPerBeat = counterFrequency / (this->bpm * PPQN / 60);
 
-    // Configure the timer period
-    __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
-    __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
+        // Configure the timer period
+        __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
+        __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
+    }
 }
 
 /**
