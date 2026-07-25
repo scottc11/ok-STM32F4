@@ -30,6 +30,7 @@ $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dac_ex.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
+$(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
