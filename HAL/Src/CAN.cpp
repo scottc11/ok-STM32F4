@@ -61,9 +61,12 @@ void CAN::init(uint32_t prescaler /*=6*/, uint32_t mode /*=CAN_MODE_NORMAL*/)
     status = HAL_CAN_Init(&_hcan);
     OK_ERROR_HANDLER(status, "HAL_CAN_Init");
 
-    /* Accept-all filter routed to RX FIFO 0 */
+    /* Accept-all filter routed to RX FIFO 0.
+     * CAN1 and CAN2 share one bank of 28 filters, split at SlaveStartFilterBank:
+     * banks 0..13 belong to CAN1, banks 14..27 belong to CAN2. A CAN2 filter
+     * MUST live in its own range or hardware drops every frame (FIFO never fills). */
     CAN_FilterTypeDef filter = {0};
-    filter.FilterBank = 0;
+    filter.FilterBank = (this->instance == CAN1) ? 0 : 14;
     filter.FilterMode = CAN_FILTERMODE_IDMASK;
     filter.FilterScale = CAN_FILTERSCALE_32BIT;
     filter.FilterIdHigh = 0x0000;
