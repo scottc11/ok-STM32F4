@@ -4,6 +4,8 @@
 #include "gpio_api.h"
 #include "Mutex.h"
 
+#define OK_CAN_ID_SYSTEM_CLOCK 0x123
+
 class CAN {
 public:
     /**
