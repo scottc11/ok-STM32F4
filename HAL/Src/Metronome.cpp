@@ -116,7 +116,7 @@ void Metronome::setBPM(float bpm)
 
         // Configure the timer period
         __HAL_TIM_SET_PRESCALER(&htim4, prescaler);
-        __HAL_TIM_SetAutoreload(&htim4, ticksPerBeat - 1); // Set the auto-reload register
+        this->setPulseFrequency(ticksPerBeat);
     }
 }
 
@@ -269,6 +269,9 @@ void Metronome::initTIM4(uint16_t prescaler, uint16_t period)
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig);
+
+    HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1);
+    this->setPulseFrequency(period);
 }
 
 /**
@@ -294,6 +297,7 @@ void Metronome::setPulseFrequency(uint32_t ticks)
 {
     ticksPerPulse = ticks; // store for debugging reference
     __HAL_TIM_SetAutoreload(&htim4, ticks);
+    __HAL_TIM_SetCompare(&htim4, TIM_CHANNEL_1, ticks / 2);
 }
 
 /**

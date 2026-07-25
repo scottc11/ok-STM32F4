@@ -6,6 +6,15 @@
 #include "Algorithms.h"
 #include "InterruptIn.h"
 
+/*
+Clock:
+
+_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|...
+
+24 pulses
+<---- one quarter note ---->
+*/
+
 #ifndef PPQN
 #define PPQN 96
 #endif
