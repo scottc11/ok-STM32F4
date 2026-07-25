@@ -30,11 +30,14 @@ class MIDI {
 
         void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
         void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
+        void sendClockTick();
+        void sendClockStart();
+        void sendClockContinue();
+        void sendClockStop();
+        void sendRealTime(uint8_t status);
 
         bool processByte(uint8_t byte);
         void parseMessage(uint8_t *data);
-        void updateDetectedBPM(uint32_t timestampUs);
-        void resetDetectedBPM();
         
         void attachNoteOnCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOnCallback = callback; }
         void attachNoteOffCallback(Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> callback) { noteOffCallback = callback; }
@@ -45,7 +48,7 @@ class MIDI {
         void attachClockTickCallback(Callback<void()> callback) { clockTickCallback = callback; }
 
         static uint8_t BUFFER_IN[3];
-        float detectedBPM = 0.0f;
+        static uint8_t BUFFER_OUT[3];
 
     private:
         Callback<void(uint8_t channel, uint8_t note, uint8_t velocity)> noteOnCallback;

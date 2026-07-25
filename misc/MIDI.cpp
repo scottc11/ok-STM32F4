@@ -1,77 +1,58 @@
 #include "MIDI.h"
 
 uint8_t MIDI::BUFFER_IN[3] = {0}; // static
+uint8_t MIDI::BUFFER_OUT[3] = {0}; // static
 
 void MIDI::sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t data[3] = {static_cast<uint8_t>(0x90 | channel), note, velocity};
-    HAL_UART_Transmit(huart, data, 3, 1000);
-};
+    BUFFER_OUT[0] = static_cast<uint8_t>(0x90 | channel);
+    BUFFER_OUT[1] = note;
+    BUFFER_OUT[2] = velocity;
+    HAL_UART_Transmit_IT(huart, BUFFER_OUT, 3);
+}
 
 void MIDI::sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t data[3] = {static_cast<uint8_t>(0x80 | channel), note, velocity};
-    HAL_UART_Transmit(huart, data, 3, 1000);
-};
+    BUFFER_OUT[0] = static_cast<uint8_t>(0x80 | channel);
+    BUFFER_OUT[1] = note;
+    BUFFER_OUT[2] = velocity;
+    HAL_UART_Transmit_IT(huart, BUFFER_OUT, 3);
+}
+
+void MIDI::sendRealTime(uint8_t status)
+{
+    while (huart->gState != HAL_UART_STATE_READY) {
+        // wait for the UART to be ready
+        HAL_Delay(1);
+    }
+
+    BUFFER_OUT[0] = status;
+    HAL_UART_Transmit_IT(huart, BUFFER_OUT, 1);
+}
+
+void MIDI::sendClockTick()
+{
+    sendRealTime(MIDIstatus::CLOCK_TICK);
+}
+
+void MIDI::sendClockStart()
+{
+    sendRealTime(MIDIstatus::CLOCK_START);
+}
+
+void MIDI::sendClockContinue()
+{
+    sendRealTime(MIDIstatus::CLOCK_CONTINUE);
+}
+
+void MIDI::sendClockStop()
+{
+    sendRealTime(MIDIstatus::CLOCK_STOP);
+}
 
 uint8_t MIDI::getChannel(uint8_t status)
 {
     return status & 0x0F;
-}
-
-void MIDI::resetDetectedBPM()
-{
-    lastClockTimestampUs = 0;
-    clockIntervalAccumUs = 0;
-    clockIntervalCount = 0;
-    hasClockTimestamp = false;
-    detectedBPM = 0.0f;
-}
-
-void MIDI::updateDetectedBPM(uint32_t timestampUs)
-{
-    // First tick only initializes the tracker.
-    if (!hasClockTimestamp)
-    {
-        lastClockTimestampUs = timestampUs;
-        hasClockTimestamp = true;
-        return;
-    }
-
-    const uint32_t deltaUs = timestampUs - lastClockTimestampUs; // unsigned handles wrap-around
-    lastClockTimestampUs = timestampUs;
-
-    // Reject outliers and restart lock when transport pauses or ticks are too fast/noisy.
-    if (deltaUs < 1000u || deltaUs > 500000u)
-    {
-        clockIntervalAccumUs = 0;
-        clockIntervalCount = 0;
-        return;
-    }
-
-    clockIntervalAccumUs += deltaUs;
-    clockIntervalCount++;
-
-    // 24 MIDI clocks = 1 quarter note.
-    if (clockIntervalCount >= 24u)
-    {
-        const float avgDeltaUs = static_cast<float>(clockIntervalAccumUs) / static_cast<float>(clockIntervalCount);
-        const float bpmRaw = 60000000.0f / (avgDeltaUs * 24.0f);
-
-        // Smooth updates to reduce jitter while staying responsive.
-        if (detectedBPM <= 0.0f)
-        {
-            detectedBPM = bpmRaw;
-        }
-        else
-        {
-            constexpr float alpha = 0.25f;
-            detectedBPM += alpha * (bpmRaw - detectedBPM);
-        }
-
-        clockIntervalAccumUs = 0;
-        clockIntervalCount = 0;
-    }
 }
 
 /**
@@ -120,13 +101,11 @@ void MIDI::parseMessage(uint8_t *data)
         switch (status)
         {
         case MIDIstatus::CLOCK_START:
-            resetDetectedBPM();
             if (clockStartCallback)
                 clockStartCallback();
             break;
 
         case MIDIstatus::CLOCK_STOP:
-            resetDetectedBPM();
             if (clockStopCallback)
                 clockStopCallback();
             break;
