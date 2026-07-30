@@ -18,18 +18,24 @@ static IRQn_Type can_rx0_irqn(CAN_TypeDef *instance)
     return CAN1_RX0_IRQn;
 }
 
-void task_CAN_manager(void *pvParameters)
+void can_manager_init(void)
 {
-    g_can = (CAN *)pvParameters;
-
-    th_can_manager = xTaskGetCurrentTaskHandle();
-
     if (!can_rx_queue) {
         can_rx_queue = xQueueCreate(CAN_RX_QUEUE_DEPTH, sizeof(CANMessage));
     }
     if (!can_tx_queue) {
         can_tx_queue = xQueueCreate(CAN_TX_QUEUE_DEPTH, sizeof(CANMessage));
     }
+}
+
+void task_CAN_manager(void *pvParameters)
+{
+    g_can = (CAN *)pvParameters;
+
+    th_can_manager = xTaskGetCurrentTaskHandle();
+
+    // Safety net in case can_manager_init() was not called before the scheduler started.
+    can_manager_init();
 
     // Wait until the application has initialized + started the peripheral before we
     // enable notifications (CAN::init() moves the handle out of the RESET state).
@@ -143,3 +149,42 @@ BaseType_t can_manager_receive(CANMessage *msg, TickType_t timeout /*=portMAX_DE
     }
     return xQueueReceive(can_rx_queue, msg, timeout);
 }
+
+/* *******************************************************
+ * How to receive CAN messages from an application
+ * *******************************************************
+ *
+ * Received frames are pushed into can_rx_queue by the RX ISR, so the correct way
+ * to consume them is a dedicated task that blocks on can_manager_receive(). Do NOT
+ * call it from a latency-sensitive task (ex. the main clock task): a blocked task
+ * costs zero CPU (the scheduler runs everyone else while it sleeps), but you don't
+ * want your clock task to be the one parked waiting on a frame.
+ *
+ *   void task_can_rx(void *pv)
+ *   {
+ *       can_manager_init();
+ *       CANMessage msg;
+ *       for (;;) {
+ *           // Blocks (sleeps) until a frame arrives; wakes only when one is ready.
+ *           if (can_manager_receive(&msg, portMAX_DELAY) == pdPASS) {
+ *               // Act on the frame here: msg.id, msg.data[0..msg.len), msg.extended
+ *               // e.g. forward to USB, update the metronome, dispatch an event, etc.
+ *           }
+ *       }
+ *   }
+ *
+ *   // create it alongside the other tasks:
+ *   xTaskCreate(task_can_rx, "CAN rx", 256, NULL, 3, NULL);
+ *
+ * To poll without blocking (only useful if you already have a periodic tick to call
+ * it from), pass a zero timeout and drain whatever is currently queued:
+ *
+ *   CANMessage msg;
+ *   while (can_manager_receive(&msg, 0) == pdPASS) {
+ *       // handle msg
+ *   }
+ *
+ * If the data must reach an event-driven task (ex. one blocked on queue_main), have
+ * the RX task stash the payload and dispatch an event to wake that task, rather than
+ * having the event-driven task block on the CAN queue directly.
+ */

@@ -29,6 +29,15 @@ extern QueueHandle_t can_rx_queue;
 extern QueueHandle_t can_tx_queue;
 
 /**
+ * @brief Create the CAN RX/TX queues. Idempotent and safe to call multiple times.
+ *
+ * Call this once BEFORE vTaskStartScheduler() (and before creating any task that
+ * calls can_manager_send/receive). This guarantees the queues exist so those calls
+ * block/enqueue correctly instead of failing fast on a null queue.
+ */
+void can_manager_init(void);
+
+/**
  * @brief Interrupt-driven CAN manager task.
  *
  * RX is fully interrupt-driven: the RX FIFO 0 "message pending" ISR drains every
