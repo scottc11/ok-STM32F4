@@ -11,16 +11,17 @@ public:
     PinMode _pull;
     GPIO_TypeDef *_port;
     uint32_t _pin_num;
-    IrqEvent _event;
+    PinEvent _event;
     IRQn_Type _irq;
     Callback<void()> riseCallback;
     Callback<void()> fallCallback;
 
-    InterruptIn(PinName pin, PinMode mode = PullNone)
+    InterruptIn(PinName pin, PinMode mode = PullNone, PinEvent event = Rising)
     {
         _pin = pin;
         _pull = mode;
-
+        _event = event;
+        
         if (_pin != NC)
         {
             for (int i = 0; i < NUM_GPIO_IRQ_INSTANCES; i++)
@@ -36,11 +37,14 @@ public:
 
     static void initialize();
     int read();
-    void handleInterupt();
+    void handleInterrupt();
     void mode(PinMode mode);
     void rise(Callback<void()> func);
     void fall(Callback<void()> func);
-    void gpio_irq_init(PinName pin);
+    void enable();
+    void disable();
+    void gpio_irq_init(PinName pin, PinEvent event = RisingFalling);
+    void gpio_irq_deinit();
     static void RouteCallback(uint16_t GPIO_Pin);
 
 private:

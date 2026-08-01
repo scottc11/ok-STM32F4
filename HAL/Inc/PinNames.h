@@ -77,6 +77,13 @@ typedef enum
 
 typedef enum
 {
+    Rising = GPIO_MODE_IT_RISING,
+    Falling = GPIO_MODE_IT_FALLING,
+    RisingFalling = GPIO_MODE_IT_RISING_FALLING,
+} PinEvent;
+
+typedef enum
+{
     PortA = 0,
     PortB = 1,
     PortC = 2,
