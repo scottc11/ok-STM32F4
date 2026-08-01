@@ -10,24 +10,26 @@ void Metronome::init()
     this->initTIM2(160, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
     this->initTIM4(160, 10000 - 1);
     this->pulse = 0;
+    extPulseInput.rise(callback(this, &Metronome::tick));
+    extResetInput.rise(callback(this, &Metronome::reset));
 }
 
 void Metronome::setMode(Mode mode)
 {
     this->mode = mode;
     
-    // reset everything
+    // Disable all clock sources
     HAL_StatusTypeDef status;
     status = HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     OK_ERROR_HANDLER(status, "HAL_TIM_IC_Stop_IT");
     status = HAL_TIM_Base_Stop_IT(&htim4);
     OK_ERROR_HANDLER(status, "HAL_TIM_Base_Stop_IT");
-    externalInputMode = false;
+    extPulseInput.disable();
+    extResetInput.disable();
 
     switch (mode)
     {
         case Mode::EXTERNAL:
-            externalInputMode = true;
             // start TIM2
             __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, TIM_ICPSC_DIV1);
             status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
@@ -45,6 +47,11 @@ void Metronome::setMode(Mode mode)
             break;
         case Mode::LINK:
             // external link handler will call tick()
+            break;
+        case Mode::TRANSPORT:
+            // transport pins control tick, reset, start/stop
+            extPulseInput.enable();
+            extResetInput.enable();
             break;
         case Mode::MANUAL:
             // app manually calls tick()
@@ -78,7 +85,7 @@ void Metronome::reset()
     __HAL_TIM_SetCounter(&htim2, 0); // not certain this has to happen, just assuming
     __HAL_TIM_SetCounter(&htim4, 0);
     this->pulse = 0;
-    if (externalInputMode)
+    if (mode == Mode::EXTERNAL)
     {
         this->step = 99; // this is a hack so that handleStep in the input capture interrupt causes an overflow back to 0
     }
@@ -158,7 +165,7 @@ void Metronome::setInputNoteDivision(InputNoteDivision division)
         OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
 
     // Restart input capture if external input mode is enabled
-    if (externalInputMode)
+    if (mode == Mode::EXTERNAL)
     {
         HAL_TIM_IC_Start_IT(&htim2, captureChannel);
     }
@@ -275,20 +282,6 @@ void Metronome::initTIM4(uint16_t prescaler, uint16_t period)
 }
 
 /**
- * @brief Take a 16-bit ADC read and map it between the min ticksPerPulse and max ticksPerPulse
- * NOTE: because a lower values actually mean faster tempos, inverting the incoming value is needed
- * @param min the minimum ADC input value
- * @param max the maximum ADC input value
- * @param value this value gets inverted
- */
-uint16_t Metronome::convertADCReadToTicks(uint16_t min, uint16_t max, uint16_t value)
-{
-    value = (max - value) + min; // invert
-    uint16_t ticks = map_num_in_range<uint16_t>(value, min, max, MIN_TICKS_PER_PULSE, MAX_TICKS_PER_PULSE);
-    return ticks;
-}
-
-/**
  * @brief Set the TIM4 overflow frequency
  *
  * @param ticks
@@ -392,14 +385,12 @@ void Metronome::handleInputCaptureCallback()
 
 void Metronome::enableInputCaptureISR()
 {
-    externalInputMode = true;
     // HAL_TIM_IC_Start_IT(&htim2, captureChannel);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 void Metronome::disableInputCaptureISR()
 {
-    externalInputMode = false;
     // HAL_TIM_IC_Stop(&htim2, captureChannel);
     __HAL_TIM_ENABLE(&htim4); // re-enable TIM4 (it gets disabled should the pulse count overtake PPQN before a new input capture event occurs)
     HAL_NVIC_DisableIRQ(TIM2_IRQn);
@@ -433,7 +424,7 @@ void Metronome::tick() {
         pulse = 0;
         handleStep();
 
-        if (externalInputMode) {
+        if (mode == Mode::EXTERNAL) {
             __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs
         }
     }
@@ -446,24 +437,6 @@ void Metronome::tick() {
 void Metronome::handleOverflowCallback()
 {
     this->tick();
-}
-
-void Metronome::handleTransportInterruptPPQN()
-{
-    if (externalPulseMode)
-    {
-        this->handleOverflowCallback();
-    }
-}
-
-void Metronome::enableExternalPulseMode(bool enable) {
-    externalPulseMode = enable;
-    if (enable == true) {
-        HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
-        HAL_TIM_Base_Stop_IT(&htim4);
-        extPulseInput.rise(callback(this, &Metronome::handleTransportInterruptPPQN));
-        extResetInput.rise(callback(this, &Metronome::reset));
-    }
 }
 
 void Metronome::attachInputCaptureCallback(Callback<void()> func)

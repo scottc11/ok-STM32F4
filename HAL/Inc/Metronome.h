@@ -47,6 +47,7 @@ public:
         INTERNAL, // internal clock (timer overflow)
         MIDI,  // MIDI clock
         LINK,  // ableton link
+        TRANSPORT, // transport pins control tick, reset, start/stop
         MANUAL // app manually calls tick()
     };
 
@@ -54,12 +55,9 @@ public:
     float bpm;              // the current BPM
     int pulse;              // the current PPQN
     uint8_t step;           // current step. Will never exceed value of stepsPerBar
-    uint16_t ticksPerStep;  // how many TIM2 ticks per one step / quarter note
     uint16_t ticksPerPulse; // how many TIM2 ticks for one PPQN
     uint8_t stepsPerBar;    // value represents the number of quarter notes per bar (ie. 3/4, 4/4, 5/4, 6/4, 7/4)
-    bool externalInputMode;
-    bool externalPulseMode;  // when true, the metronome will use an external input signal to advance the clock by 1 PPQN
-    bool bpmExceeded;        //
+    bool bpmExceeded;
     InputNoteDivision inputNoteDivision;
     bool running;
 
@@ -95,8 +93,7 @@ public:
         captureChannel = _captureChannel;
         mode = Mode::INTERNAL;
         bpm = 120;
-        ticksPerStep = 11129;
-        ticksPerPulse = ticksPerStep / PPQN;
+        ticksPerPulse = 11129 / PPQN;
         stepsPerBar = 4;
         inputNoteDivision = InputNoteDivision::QUARTER_NOTE;
         running = false;
@@ -119,10 +116,9 @@ public:
     void handleStep();
 
     void setPulseFrequency(uint32_t ticks);
-    uint16_t convertADCReadToTicks(uint16_t min, uint16_t max, uint16_t value);
+
     void enableInputCaptureISR();
     void disableInputCaptureISR();
-    void enableExternalPulseMode(bool enable);
 
     // Callback Setters
     void attachInputCaptureCallback(Callback<void()> func);
@@ -137,7 +133,6 @@ public:
     // Low Level HAL interupt handlers
     void handleInputCaptureCallback();
     void handleOverflowCallback();
-    void handleTransportInterruptPPQN();
     static void RouteOverflowCallback(TIM_HandleTypeDef *htim);
     static void RouteCaptureCallback(TIM_HandleTypeDef *htim);
     static void RouteTimerGlobalInterrupt(TIM_TypeDef *tim_instance);
