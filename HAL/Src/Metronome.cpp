@@ -421,11 +421,12 @@ void Metronome::tick() {
     }
     else
     {
-        pulse = 0;
-        handleStep();
-
         if (mode == Mode::EXTERNAL) {
-            __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs
+            __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs (see handleInputCaptureCallback())
+            handleStep();
+        } else {
+            pulse = 0;
+            handleStep();
         }
     }
 }
