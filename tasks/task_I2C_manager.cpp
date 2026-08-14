@@ -30,14 +30,20 @@ void task_I2C_manager(void *pvParameters)
     {
         OK_I2C_MANAGER_WHILE_LOOP_START(&last_wake_time);
 
-        // 1) Drain ALL queued requests this tick (max 25ms)
-        while (xQueueReceive(i2c_queue, &current_req, pdMS_TO_TICKS(25)) == pdPASS)
+        // 1) Drain ALL queued requests this tick. The receive does not block, so the loop period is
+        // set solely by whatever OK_I2C_MANAGER_WHILE_LOOP_START does (typically a vTaskDelayUntil).
+        while (xQueueReceive(i2c_queue, &current_req, 0) == pdPASS)
         {
             i2c_tx_err = 0;
             i2c_tx_busy = 1;
 
             HAL_StatusTypeDef status;
-            
+
+            // Claim the bus for the duration of the transaction. A bus may also carry blocking
+            // transfers issued directly by other tasks, and those only serialize against us if we
+            // take the same mutex they do.
+            current_req.instance->lock();
+
             // Start the I2C transaction
             switch (current_req.type)
             {
@@ -54,12 +60,15 @@ void task_I2C_manager(void *pvParameters)
 
             if (status == HAL_BUSY)
             {
+                current_req.instance->unlock();
                 // peripheral still busy; re-queue and re-try on next tick
                 (void)xQueueSendToFront(i2c_queue, &current_req, 0);
                 break;
             }
             else if (status != HAL_OK)
             {
+                current_req.instance->unlock();
+
                 // start failed
                 i2c_tx_busy = 0;
                 i2c_tx_err = 1;
@@ -76,6 +85,8 @@ void task_I2C_manager(void *pvParameters)
             {
                 i2c_tx_err = 1;
             }
+
+            current_req.instance->unlock();
 
             // notify waiting task (if any)
             if (current_req.waiter)
@@ -215,8 +226,9 @@ BaseType_t i2c_submit_async(const I2CRequest &req)
 */
 extern "C" __weak void OK_I2C_MANAGER_WHILE_LOOP_START(TickType_t *last_wake_time)
 {
-    UNUSED(last_wake_time);
-    // default implementation does nothing
+    // The drain loop never blocks, so this hook is what paces the task. An override is free to
+    // choose a different period, but it must block somewhere.
+    vTaskDelayUntil(last_wake_time, pdMS_TO_TICKS(25));
 }
 
 /**

@@ -46,6 +46,12 @@ public:
     HAL_StatusTypeDef read(int address, uint8_t *data, int length, bool repeated = false);
     bool isDeviceReady(uint8_t address, uint8_t retries = 3, uint32_t timeout_ms = 10);
 
+    // Claim the bus for a transfer this class does not itself perform (ie. an interrupt driven
+    // transfer issued by the I2C manager task). Required whenever a bus carries both blocking
+    // and interrupt driven traffic, otherwise the two masters will collide mid-transaction.
+    void lock(TickType_t wait = portMAX_DELAY) { mutex.lock(wait); };
+    void unlock() { mutex.unlock(); };
+
     // registry of instances, index 1..3 (0 unused)
     static I2C *instances[4];
 

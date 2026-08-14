@@ -78,6 +78,13 @@ public:
 
 	I2C * i2c;
 	char address;
+
+  // The LED driver registers (RegTOn0 through RegTFall15) occupy one contiguous block. Since
+  // setMiscConfig() leaves RegMisc's auto-increment bit clear, any span of this block can be
+  // written in a single transaction rather than one transaction per register.
+  static const uint8_t REG_LED_DRIVER_BASE = 0x29;
+  static const uint8_t REG_LED_DRIVER_BLOCK_SIZE = 64;
+
   char REG_I_ON[16] = { REG_I_ON_0, REG_I_ON_1, REG_I_ON_2, REG_I_ON_3, REG_I_ON_4, REG_I_ON_5, REG_I_ON_6, REG_I_ON_7, REG_I_ON_8, REG_I_ON_9, REG_I_ON_10, REG_I_ON_11, REG_I_ON_12, REG_I_ON_13, REG_I_ON_14, REG_I_ON_15 };
   char REG_T_ON[16] = { REG_T_ON_0, REG_T_ON_1, REG_T_ON_2, REG_T_ON_3, REG_T_ON_4, REG_T_ON_5, REG_T_ON_6, REG_T_ON_7, REG_T_ON_8, REG_T_ON_9, REG_T_ON_10, REG_T_ON_11, REG_T_ON_12, REG_T_ON_13, REG_T_ON_14, REG_T_ON_15 };
   char REG_OFF[16] = { REG_OFF_0, REG_OFF_1, REG_OFF_2, REG_OFF_3, REG_OFF_4, REG_OFF_5, REG_OFF_6, REG_OFF_7, REG_OFF_8, REG_OFF_9, REG_OFF_10, REG_OFF_11, REG_OFF_12, REG_OFF_13, REG_OFF_14, REG_OFF_15};
