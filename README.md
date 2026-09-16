@@ -42,9 +42,10 @@ MyProject/
 #### add the ok-STM32F4 repo as a submodule to your new project
 ```
 git submodule add https://github.com/scottc11/ok-STM32F4.git
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
+
+`--recursive` is required: ok-STM32F4 vendors the TinyUSB device stack as its own nested submodule under `middleware/tinyusb`.
 
 #### Your new project needs its own make Makefile which includes the ok-STM32F4 Makefile. It should look something like this:
 ```

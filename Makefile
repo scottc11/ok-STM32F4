@@ -2,6 +2,8 @@
 ######################################
 # source
 ######################################
+TINYUSB_PATH = $(LIB_PATH)/middleware/tinyusb
+
 # C sources
 
 C_SOURCES += \
@@ -32,9 +34,6 @@ $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
 $(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-$(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
-$(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
-$(LIB_PATH)/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/croutine.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/event_groups.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/list.c \
@@ -45,23 +44,22 @@ $(LIB_PATH)/middleware/FreeRTOS/Source/timers.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/portable/MemMang/heap_4.c \
 $(LIB_PATH)/middleware/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
-$(LIB_PATH)/middleware/USB_DEVICE/App/usb_device.c \
-$(LIB_PATH)/middleware/USB_DEVICE/App/usbd_desc.c \
-$(LIB_PATH)/middleware/USB_DEVICE/App/usbd_cdc_if.c \
-$(LIB_PATH)/middleware/USB_DEVICE/Target/usbd_conf.c \
-$(LIB_PATH)/middleware/STM32_USB_Device_Library/Core/Src/usbd_core.c \
-$(LIB_PATH)/middleware/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
-$(LIB_PATH)/middleware/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
-$(LIB_PATH)/middleware/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c \
 $(LIB_PATH)/system/Src/freertos.c \
 $(LIB_PATH)/system/Src/stm32f4xx_hal_timebase_tim.c \
 $(LIB_PATH)/system/Src/stm32f4xx_hal_msp.c \
 $(LIB_PATH)/system/Src/stm32f4xx_it.c \
 $(LIB_PATH)/system/Src/system_stm32f4xx.c \
-$(LIB_PATH)/system/Src/system_clock_config.c
-
-# C_SOURCES += $(shell find $(LIB_PATH)/middleware/STM32_USB_Device_Library -name '*.c')
-# C_SOURCES += $(shell find $(LIB_PATH)/middleware/USB_DEVICE -name '*.c')
+$(LIB_PATH)/system/Src/system_clock_config.c \
+$(LIB_PATH)/middleware/usb/usb_device.c \
+$(LIB_PATH)/middleware/usb/usb_descriptors.c \
+$(TINYUSB_PATH)/src/tusb.c \
+$(TINYUSB_PATH)/src/common/tusb_fifo.c \
+$(TINYUSB_PATH)/src/device/usbd.c \
+$(TINYUSB_PATH)/src/class/cdc/cdc_device.c \
+$(TINYUSB_PATH)/src/class/midi/midi_device.c \
+$(TINYUSB_PATH)/src/class/dfu/dfu_rt_device.c \
+$(TINYUSB_PATH)/src/portable/synopsys/dwc2/dcd_dwc2.c \
+$(TINYUSB_PATH)/src/portable/synopsys/dwc2/dwc2_common.c
 
 CPP_SOURCES += $(shell find $(LIB_PATH)/HAL -name '*.cpp')
 CPP_SOURCES += $(shell find $(LIB_PATH)/RTOS -name '*.cpp')
@@ -83,10 +81,8 @@ C_INCLUDES += \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/include \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/CMSIS_RTOS_V2 \
 -I$(LIB_PATH)/middleware/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I$(LIB_PATH)/middleware/STM32_USB_Device_Library/Class/CDC/Inc \
--I$(LIB_PATH)/middleware/STM32_USB_Device_Library/Core/Inc \
--I$(LIB_PATH)/middleware/USB_DEVICE/App \
--I$(LIB_PATH)/middleware/USB_DEVICE/Target \
+-I$(LIB_PATH)/middleware/usb \
+-I$(TINYUSB_PATH)/src \
 -I$(LIB_PATH)/misc \
 -I$(LIB_PATH)/tasks \
 -I$(LIB_PATH)/system/Inc \

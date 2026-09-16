@@ -165,6 +165,12 @@ standard names. */
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
+
+/* This FreeRTOS predates pdTICKS_TO_MS, which TinyUSB's OSAL relies on. */
+#ifndef pdTICKS_TO_MS
+	#define pdTICKS_TO_MS( xTicks ) ( ( TickType_t ) ( ( ( uint64_t ) ( xTicks ) * ( uint64_t ) 1000U ) / ( uint64_t ) configTICK_RATE_HZ ) )
+#endif
+
 /* USER CODE END Defines */
 
 #endif /* FREERTOS_CONFIG_H */

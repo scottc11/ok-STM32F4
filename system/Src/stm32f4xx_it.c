@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include "tusb.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -57,7 +58,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim5;
-extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN EV */
 
@@ -166,7 +166,7 @@ void DebugMon_Handler(void)
  */
 void OTG_FS_IRQHandler(void)
 {
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
+  tud_int_handler(0);
 }
 
 /**
