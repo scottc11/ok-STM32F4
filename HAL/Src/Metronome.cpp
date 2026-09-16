@@ -38,12 +38,17 @@ void Metronome::setMode(Mode mode)
             OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
             break;
         case Mode::INTERNAL:
-            // start TIM4
-            status = HAL_TIM_Base_Start_IT(&htim4);
+            this->setBPM(this->bpm); // ensure timer overflow matches BPM
+            status = HAL_TIM_Base_Start_IT(&htim4); // start TIM4
             OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
             break;
         case Mode::MIDI:
             // external midi handler will call tick()
+            // TIM4 becomes a period-measurement + falling-edge timer.
+            // Ticks arrive via tick(); the CC1 compare drives the pin low at 50% duty.
+            __HAL_TIM_SetAutoreload(&htim4, 0xFFFF); // never wrap between ticks
+            __HAL_TIM_SetCounter(&htim4, 0);
+            __HAL_TIM_ENABLE(&htim4); // make the free-run intentional
             break;
         case Mode::LINK:
             // external link handler will call tick()
@@ -63,13 +68,16 @@ void Metronome::start()
 {
     this->reset();
     running = true;
-    this->setMode(mode);
+    if (startCallback)
+        startCallback();
 }
 
 void Metronome::stop() {
     running = false;
     // HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     HAL_TIM_Base_Stop_IT(&htim4);
+    if (stopCallback)
+        stopCallback();
 }
 
 void Metronome::reset()
@@ -101,6 +109,8 @@ void Metronome::reset()
  * @brief Set the BPM of the metronome
  * This internally calculates the ticks per beat based on the BPM and PPQN and 
  * sets the TIM4 period to the calculated value
+ * 
+ * TODO: when mode is INTERNAL, this value is ignored and the BPM is set based on the timer clock frequency and the prescaler value
  * @param bpm 
  */
 void Metronome::setBPM(float bpm)
@@ -115,7 +125,7 @@ void Metronome::setBPM(float bpm)
 
     if (mode == Mode::INTERNAL) {
         uint32_t timerClockFrequency = tim_get_APBx_freq(&htim4);          // Get the timer clock bus frequency
-        uint32_t prescaler = 100;                                          // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
+        uint32_t prescaler = 100; // note: a good prescaler value for a 16 bit timer @ 90MHz is 100, which allows for a BPM range of 40 to 240
         uint32_t counterFrequency = timerClockFrequency / (prescaler + 1); // Calculate the counter frequency
 
         // Calculate the ticks per beat
@@ -405,6 +415,20 @@ void Metronome::tick() {
 
     if (running == false) return;
 
+    // when in MIDI mode, TIM4 becomes a period-measurement + falling-edge timer which needs to be updated with the elapsed time between MIDI ticks
+    if (mode == Mode::MIDI)
+    {
+        uint32_t elapsed = __HAL_TIM_GetCounter(&htim4); // ticks since last MIDI tick
+        __HAL_TIM_SetCounter(&htim4, 0);
+        
+        // Ignore the garbage first measurement after a mode switch / clock start,
+        // and clamp to the same limits the EXTERNAL path uses.
+        if (elapsed >= MIN_TICKS_PER_PULSE && elapsed <= MAX_TICKS_PER_PULSE)
+        {
+            __HAL_TIM_SetCompare(&htim4, TIM_CHANNEL_1, elapsed / 2);
+        }
+    }
+
     if (ppqnCallback)
         ppqnCallback(pulse); // when clock inits, this ensures the 0ith pulse will get handled
 
@@ -448,6 +472,16 @@ void Metronome::attachInputCaptureCallback(Callback<void()> func)
 void Metronome::attachPPQNCallback(Callback<void(uint8_t pulse)> func)
 {
     ppqnCallback = func;
+}
+
+void Metronome::attachStartCallback(Callback<void()> func)
+{
+    startCallback = func;
+}
+
+void Metronome::attachStopCallback(Callback<void()> func)
+{
+    stopCallback = func;
 }
 
 void Metronome::attachStepCallback(Callback<void(uint16_t step)> func)

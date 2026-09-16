@@ -25,6 +25,10 @@ uint32_t tim_get_APBx_freq(TIM_HandleTypeDef *htim) {
     return pclk * 2; // Timer clocks are always equal to PCLK * 2 (see CubeMX clock config)
 }
 
+uint32_t tim_get_prescaler(TIM_HandleTypeDef *htim) {
+    return htim->Instance->PSC;
+}
+
 /**
  * @brief Get the freqeuncy of TIMx
  * OverflowEvent = APBx / ((period + 1) * (prescaler + 1))

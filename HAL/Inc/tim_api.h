@@ -16,6 +16,8 @@ TIM6, TIM7 :: 16-bit
 
 uint32_t tim_get_APBx_freq(TIM_HandleTypeDef *htim);
 
+uint32_t tim_get_prescaler(TIM_HandleTypeDef *htim);
+
 uint32_t tim_get_overflow_freq(TIM_HandleTypeDef *htim);
 
 void tim_set_overflow_freq(TIM_HandleTypeDef *htim, uint32_t targetFrequency, uint32_t maxTimerResolution);
