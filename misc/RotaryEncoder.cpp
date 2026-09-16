@@ -1,7 +1,7 @@
 #include "RotaryEncoder.h"
 
 RotaryEncoder::RotaryEncoder(PinName _pinA, PinName _pinB, PinName _buttonPin)
-    : pinA(_pinA, PullUp), pinB(_pinB, PullUp), button(_buttonPin, PullUp)
+    : pinA(_pinA, PullUp, PinEvent::RisingFalling), pinB(_pinB, PullUp), button(_buttonPin, PullUp, PinEvent::RisingFalling)
 {
     pinA.fall(callback(this, &RotaryEncoder::onRotate));
     button.fall(callback(this, &RotaryEncoder::onPress));
