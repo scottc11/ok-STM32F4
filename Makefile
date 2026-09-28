@@ -58,7 +58,8 @@ $(LIB_PATH)/system/Src/stm32f4xx_hal_timebase_tim.c \
 $(LIB_PATH)/system/Src/stm32f4xx_hal_msp.c \
 $(LIB_PATH)/system/Src/stm32f4xx_it.c \
 $(LIB_PATH)/system/Src/system_stm32f4xx.c \
-$(LIB_PATH)/system/Src/system_clock_config.c
+$(LIB_PATH)/system/Src/system_clock_config.c \
+$(LIB_PATH)/system/Src/system.c
 
 # C_SOURCES += $(shell find $(LIB_PATH)/middleware/STM32_USB_Device_Library -name '*.c')
 # C_SOURCES += $(shell find $(LIB_PATH)/middleware/USB_DEVICE -name '*.c')
