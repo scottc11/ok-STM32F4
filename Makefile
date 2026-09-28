@@ -50,6 +50,7 @@ $(LIB_PATH)/system/Src/stm32f4xx_hal_msp.c \
 $(LIB_PATH)/system/Src/stm32f4xx_it.c \
 $(LIB_PATH)/system/Src/system_stm32f4xx.c \
 $(LIB_PATH)/system/Src/system_clock_config.c \
+$(LIB_PATH)/system/Src/system.c \
 $(LIB_PATH)/middleware/usb/usb_device.c \
 $(LIB_PATH)/middleware/usb/usb_descriptors.c \
 $(TINYUSB_PATH)/src/tusb.c \
