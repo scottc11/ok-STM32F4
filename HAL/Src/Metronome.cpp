@@ -446,7 +446,9 @@ void Metronome::tick() {
     else
     {
         if (mode == Mode::EXTERNAL) {
-            __HAL_TIM_DISABLE(&htim4); // halt TIM4 until a new input capture event occurs (see handleInputCaptureCallback())
+            // Clear CEN directly. __HAL_TIM_DISABLE leaves the counter running while
+            // an output-compare channel is enabled (initTIM4 starts TIM_CHANNEL_1).
+            htim4.Instance->CR1 &= ~TIM_CR1_CEN;
             handleStep();
         } else {
             pulse = 0;
