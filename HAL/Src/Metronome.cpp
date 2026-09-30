@@ -158,6 +158,19 @@ void Metronome::setInputNoteDivision(InputNoteDivision division)
     quarterPeriodAccum = 0;
 }
 
+InputNoteDivision Metronome::mapInputNoteDivision(uint8_t value)
+{
+    switch (value) {
+        case 0:
+            return InputNoteDivision::QUARTER_NOTE;
+        case 1:
+            return InputNoteDivision::EIGHTH_NOTE;
+        case 2:
+            return InputNoteDivision::SIXTEENTH_NOTE;
+    }
+    return InputNoteDivision::QUARTER_NOTE;
+}
+
 void Metronome::setStepsPerBar(int steps)
 {
     if (steps < 3 || steps > 7) return;

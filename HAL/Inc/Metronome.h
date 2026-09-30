@@ -118,6 +118,7 @@ public:
     float getBPM();
     void setMode(Mode mode);
     void setInputNoteDivision(InputNoteDivision division);
+    InputNoteDivision mapInputNoteDivision(uint8_t value);
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();
     void handleStep();
