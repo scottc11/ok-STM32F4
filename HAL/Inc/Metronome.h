@@ -28,11 +28,12 @@ _|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|...
 #define MAX_TICKS_PER_PULSE 34299 // (40 BPM)  MAX TIM4 tickers per pulse
 #define MIN_TICKS_PER_PULSE 5716  // (240 BPM) MIN TIM4 tickers per pulse
 
+// How many incoming clock edges make one quarter note.
+// The capture callback sums this many edges, then divides by PPQN.
 enum class InputNoteDivision : uint32_t {
-    QUARTER_NOTE = TIM_ICPSC_DIV1,    // capture every edge
-    EIGHTH_NOTE = TIM_ICPSC_DIV2,     // capture every 2nd edge  
-    SIXTEENTH_NOTE = TIM_ICPSC_DIV4, // capture every 4th edge
-    THIRTY_SECOND_NOTE = TIM_ICPSC_DIV8 // capture every 8th edge
+    QUARTER_NOTE = 1,
+    EIGHTH_NOTE = 2,
+    SIXTEENTH_NOTE = 4
 };
 
 extern TIM_HandleTypeDef htim2; // 32-bit timer
@@ -99,6 +100,10 @@ public:
         stepsPerBar = 4;
         inputNoteDivision = InputNoteDivision::QUARTER_NOTE;
         running = false;
+        previousCapture = 0;
+        hasPreviousCapture = false;
+        inputEdgeCount = 0;
+        quarterPeriodAccum = 0;
     };
 
     void init();
@@ -143,4 +148,9 @@ public:
 
 private:
     static Metronome *instance;
+
+    uint32_t previousCapture;    // TIM2 capture at the previous input edge
+    bool hasPreviousCapture;
+    uint32_t inputEdgeCount;     // edges accumulated toward the current quarter note
+    uint32_t quarterPeriodAccum; // sum of those edge periods, in TIM2 ticks
 };

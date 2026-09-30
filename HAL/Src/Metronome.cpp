@@ -30,8 +30,12 @@ void Metronome::setMode(Mode mode)
     switch (mode)
     {
         case Mode::EXTERNAL:
-            // start TIM2
+            // Capture every edge. Note division is applied in handleInputCaptureCallback().
             __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, TIM_ICPSC_DIV1);
+            previousCapture = 0;
+            hasPreviousCapture = false;
+            inputEdgeCount = 0;
+            quarterPeriodAccum = 0;
             status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
             OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
             status = HAL_TIM_Base_Start_IT(&htim4);
@@ -82,25 +86,19 @@ void Metronome::stop() {
 
 void Metronome::reset()
 {
-    // there is a timing issue here. Something to do with both the clock in and reset interrupts firing at the same time.
-    // since a reset will wait for the next input capture event, we will need to somehow reset the capture counter? Otherwise if a reset occurs
-    // halfway through a step, the clock will be 8 16th notes out of sync.
-    // the internal prescaler counter doesn't get reset to 0, so it might be partway through counting to the prescaler value when the next actual input pulse arrives.
-    // Reset the input capture prescaler counter by generating a software capture event
-    // __HAL_RCC_TIM2_FORCE_RESET();
-    // __HAL_RCC_TIM2_RELEASE_RESET();
-
-    __HAL_TIM_SetCounter(&htim2, 0); // not certain this has to happen, just assuming
+    // Drop any partial group of input edges so the next quarter note starts on the following edges.
+    __HAL_TIM_SetCounter(&htim2, 0);
     __HAL_TIM_SetCounter(&htim4, 0);
+    
+    // reset note division tracking variables 
+    previousCapture = 0;
+    hasPreviousCapture = false;
+    inputEdgeCount = 0;
+    quarterPeriodAccum = 0;
+    
     this->pulse = 0;
-    if (mode == Mode::EXTERNAL)
-    {
-        this->step = 99; // this is a hack so that handleStep in the input capture interrupt causes an overflow back to 0
-    }
-    else
-    {
-        this->step = 0;
-    }
+    this->step = 0;
+
     if (resetCallback)
         resetCallback(pulse);
 }
@@ -148,37 +146,16 @@ float Metronome::getBPM()
 
 
 /**
- * @brief Set the input note division via the TIM2 input capture prescaler
- * 
- * @param division 
+ * @brief Set how many incoming clock edges make one quarter note.
+ * Capture stays on every edge. The capture callback sums that many periods.
+ *
+ * @param division
  */
 void Metronome::setInputNoteDivision(InputNoteDivision division)
 {
     inputNoteDivision = division;
-
-    // Stop input capture before reconfiguring
-    HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
-
-    // Reset the prescaler counter to avoid timing artifacts
-    __HAL_TIM_SET_ICPRESCALER(&htim2, captureChannel, static_cast<uint32_t>(inputNoteDivision));
-
-    // Configure input capture channel with new prescaler
-    TIM_IC_InitTypeDef sConfigIC = {0};
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICFilter = 0;
-
-    sConfigIC.ICPrescaler = static_cast<uint32_t>(inputNoteDivision);
-
-    HAL_StatusTypeDef status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
-    if (status != HAL_OK)
-        OK_ERROR_HANDLER(status, "HAL_TIM_IC_ConfigChannel");
-
-    // Restart input capture if external input mode is enabled
-    if (mode == Mode::EXTERNAL)
-    {
-        HAL_TIM_IC_Start_IT(&htim2, captureChannel);
-    }
+    inputEdgeCount = 0;
+    quarterPeriodAccum = 0;
 }
 
 void Metronome::setStepsPerBar(int steps)
@@ -250,7 +227,7 @@ void Metronome::initTIM2(uint16_t prescaler, uint32_t period) // isn't TIM2 a 32
 
     sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // dedicated prescaler allows to "slow down" the frequency of the input signal
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1; // capture every edge; note division is applied in software
     sConfigIC.ICFilter = 0;                 // filter used to "debounce" the input signal
     status = HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, captureChannel);
     if (status != HAL_OK)
@@ -322,24 +299,44 @@ void Metronome::setPulseFrequency(uint32_t ticks)
  */
 void Metronome::handleInputCaptureCallback()
 {
-    // Get the current capture value
     uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
-    
-    // Store the previous capture value for future use
-    static uint32_t previousCapture = 0;
-    
-    // Calculate period between captures, handling potential overflow
-    if (previousCapture == 0) {
-        // First valid capture after reset
-        capturePeriod = currentCapture;
-    } else {
-        // Calculate period between captures
-        capturePeriod = tim_get_capture_period(&htim2, currentCapture, previousCapture);
+
+    // The first edge after a reset has no previous timestamp. Arm the measurement and
+    // still emit pulse 0 so the quarter-note LED lights. Leave the edge count and
+    // TIM4 period alone; the next completed group supplies a real period.
+    if (!hasPreviousCapture)
+    {
+        previousCapture = currentCapture;
+        hasPreviousCapture = true;
+        __HAL_TIM_SetCounter(&htim4, 0);
+        __HAL_TIM_ENABLE(&htim4);
+        this->pulse = 0;
+        this->handleOverflowCallback();
+        return;
     }
-    
-    // Update previous capture for next calculation
+
+    uint32_t edgePeriod = tim_get_capture_period(&htim2, currentCapture, previousCapture);
     previousCapture = currentCapture;
-    
+
+    // inputNoteDivision is the number of incoming edges in one quarter note.
+    // Add each edge until that many have arrived, then treat the sum as the quarter-note period.
+    uint32_t edgesPerQuarter = static_cast<uint32_t>(inputNoteDivision);
+    if (edgesPerQuarter == 0)
+        edgesPerQuarter = 1;
+
+    if (quarterPeriodAccum > (0xFFFFFFFFU - edgePeriod))
+        quarterPeriodAccum = 0xFFFFFFFFU;
+    else
+        quarterPeriodAccum += edgePeriod;
+
+    inputEdgeCount++;
+    if (inputEdgeCount < edgesPerQuarter)
+        return;
+
+    capturePeriod = quarterPeriodAccum;
+    inputEdgeCount = 0;
+    quarterPeriodAccum = 0;
+
     // check if external BPM has exceeded internal limits
     uint32_t ticksPerPulse = capturePeriod / PPQN;
     static uint8_t bpmExceededCount = 0;
