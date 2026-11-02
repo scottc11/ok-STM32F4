@@ -10,6 +10,12 @@ void Metronome::init()
     this->initTIM2(160, 0xFFFFFFFF - 1); // precaler value handles BPM range 40..240
     this->initTIM4(160, 10000 - 1);
     this->pulse = 0;
+    
+    // Always leave input capture running, regardless of mode
+    HAL_StatusTypeDef status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
+    OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
+    
+    // Transport interrupts
     extPulseInput.rise(callback(this, &Metronome::tick));
     extResetInput.rise(callback(this, &Metronome::reset));
 }
@@ -20,8 +26,6 @@ void Metronome::setMode(Mode mode)
     
     // Disable all clock sources
     HAL_StatusTypeDef status;
-    status = HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
-    OK_ERROR_HANDLER(status, "HAL_TIM_IC_Stop_IT");
     status = HAL_TIM_Base_Stop_IT(&htim4);
     OK_ERROR_HANDLER(status, "HAL_TIM_Base_Stop_IT");
     extPulseInput.disable();
@@ -36,8 +40,6 @@ void Metronome::setMode(Mode mode)
             hasPreviousCapture = false;
             inputEdgeCount = 0;
             quarterPeriodAccum = 0;
-            status = HAL_TIM_IC_Start_IT(&htim2, captureChannel);
-            OK_ERROR_HANDLER(status, "HAL_TIM_IC_Start_IT");
             status = HAL_TIM_Base_Start_IT(&htim4);
             OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
             break;
@@ -78,7 +80,6 @@ void Metronome::start()
 
 void Metronome::stop() {
     running = false;
-    // HAL_TIM_IC_Stop_IT(&htim2, captureChannel);
     HAL_TIM_Base_Stop_IT(&htim4);
     if (stopCallback)
         stopCallback();
@@ -144,6 +145,51 @@ float Metronome::getBPM()
     return bpm;
 }
 
+bool Metronome::checkIfBpmExceeded()
+{
+    uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
+
+    if (!hasPreviousCapture) {
+        previousCapture = currentCapture;
+        hasPreviousCapture = true;
+        return false;
+    }
+
+    capturePeriod = tim_get_capture_period(&htim2, currentCapture, previousCapture);
+    previousCapture = currentCapture;
+
+    uint32_t timerTicksPerPulse = capturePeriod / PPQN;
+    static uint8_t bpmExceededCount = 0;
+    if (timerTicksPerPulse > MAX_TICKS_PER_PULSE)
+    {
+        return false;
+    }
+    // handle BPM exceeded
+    else if (timerTicksPerPulse < MIN_TICKS_PER_PULSE)
+    {
+        bpmExceededCount++;
+        if (bpmExceededCount >= 3)
+        {
+            bpmExceeded = true;
+            bpmExceededCount = 0;
+            if (bpmExceededCallback)
+                bpmExceededCallback(capturePeriod);
+            return true;
+        }
+    }
+    else // handle BPM stabilization
+    {
+        bpmExceededCount = 0;
+        if (bpmExceeded)
+        {
+            bpmExceeded = false;
+            bpmExceededCount = 0;
+            if (bpmStabilizedCallback)
+                bpmStabilizedCallback();
+        }
+    }
+    return false;
+}
 
 /**
  * @brief Set how many incoming clock edges make one quarter note.
@@ -312,6 +358,12 @@ void Metronome::setPulseFrequency(uint32_t ticks)
  */
 void Metronome::handleInputCaptureCallback()
 {
+    if (mode != Mode::EXTERNAL)
+    {
+        checkIfBpmExceeded();
+        return;
+    }
+
     uint32_t currentCapture = __HAL_TIM_GetCompare(&htim2, captureChannel);
 
     // The first edge after a reset has no previous timestamp. Arm the measurement and

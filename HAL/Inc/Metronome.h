@@ -58,7 +58,7 @@ public:
     uint8_t step;           // current step. Will never exceed value of stepsPerBar
     uint16_t ticksPerPulse; // how many TIM2 ticks for one PPQN
     uint8_t stepsPerBar;    // value represents the number of quarter notes per bar (ie. 3/4, 4/4, 5/4, 6/4, 7/4)
-    bool bpmExceeded;
+    bool bpmExceeded;     // true if the external BPM exceeds the internal BPM limit
     InputNoteDivision inputNoteDivision;
     bool running;
 
@@ -116,6 +116,7 @@ public:
     void reset();
     void setBPM(float bpm);
     float getBPM();
+    bool checkIfBpmExceeded();
     void setMode(Mode mode);
     void setInputNoteDivision(InputNoteDivision division);
     InputNoteDivision mapInputNoteDivision(uint8_t value);
