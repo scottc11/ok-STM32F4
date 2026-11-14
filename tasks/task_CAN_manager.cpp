@@ -125,11 +125,13 @@ BaseType_t can_manager_send(uint32_t id, uint8_t *data, uint8_t len, bool extend
         len = 8;
     }
 
-    CANMessage msg;
+    CANMessage msg = {};
     msg.id = id;
     msg.len = len;
     msg.extended = extended;
-    memcpy(msg.data, data, len);
+    if (data != nullptr && len > 0) {
+        memcpy(msg.data, data, len);
+    }
 
     return xQueueSend(can_tx_queue, &msg, timeout);
 }

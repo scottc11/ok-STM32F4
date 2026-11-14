@@ -137,8 +137,13 @@ void MIDI::parseMessage(uint8_t *data)
             break;
         
         case MIDIstatus::NOTE_ON:
-            if (noteOnCallback)
+            // A note-on with velocity 0 is a note-off. Receivers on every transport handle it here.
+            if (data[2] == 0) {
+                if (noteOffCallback)
+                    noteOffCallback(channel, data[1], 0);
+            } else if (noteOnCallback) {
                 noteOnCallback(channel, data[1], data[2]);
+            }
             break;
 
         case MIDIstatus::POLYPHONIC_KEY_PRESSURE:

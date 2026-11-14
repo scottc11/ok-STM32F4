@@ -4,7 +4,10 @@
 #include "gpio_api.h"
 #include "Mutex.h"
 
+// Device IDs for MIDI-over-CAN. A frame on one of these IDs is a single raw MIDI
+// message; see MidiCan.h. Do not put any other payload format on the same ID.
 #define OK_CAN_ID_SYSTEM_CLOCK 0x123
+#define OK_CAN_ID_COUNTERPOINT 0x124
 
 class CAN {
 public:
