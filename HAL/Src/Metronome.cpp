@@ -28,6 +28,11 @@ void Metronome::setMode(Mode mode)
     HAL_StatusTypeDef status;
     status = HAL_TIM_Base_Stop_IT(&htim4);
     OK_ERROR_HANDLER(status, "HAL_TIM_Base_Stop_IT");
+    // Stop_IT leaves CEN set while channel 1 is enabled, so an overflow can
+    // latch before the counter actually stops. Drop it before a mode below
+    // re-enables the update interrupt, or that pending flag fires a tick immediately.
+    htim4.Instance->CR1 &= ~TIM_CR1_CEN;
+    __HAL_TIM_CLEAR_FLAG(&htim4, TIM_FLAG_UPDATE);
     extPulseInput.disable();
     extResetInput.disable();
 
@@ -74,6 +79,9 @@ void Metronome::start()
 {
     this->reset();
     running = true;
+    // Re-arm whatever source this mode uses. stop() only halts TIM4.
+    this->setMode(this->mode);
+
     if (startCallback)
         startCallback();
 }
@@ -81,6 +89,9 @@ void Metronome::start()
 void Metronome::stop() {
     running = false;
     HAL_TIM_Base_Stop_IT(&htim4);
+    // Clear CEN directly. __HAL_TIM_DISABLE leaves the counter running while
+    // an output-compare channel is enabled (initTIM4 starts TIM_CHANNEL_1).
+    htim4.Instance->CR1 &= ~TIM_CR1_CEN;
     if (stopCallback)
         stopCallback();
 }
