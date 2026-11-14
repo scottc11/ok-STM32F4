@@ -28,13 +28,7 @@ _|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|_|‾|...
 #define MAX_TICKS_PER_PULSE 34299 // (40 BPM)  MAX TIM4 tickers per pulse
 #define MIN_TICKS_PER_PULSE 5716  // (240 BPM) MIN TIM4 tickers per pulse
 
-// How many incoming clock edges make one quarter note.
-// The capture callback sums this many edges, then divides by PPQN.
-enum class InputNoteDivision : uint32_t {
-    QUARTER_NOTE = 1,
-    EIGHTH_NOTE = 2,
-    SIXTEENTH_NOTE = 4
-};
+
 
 extern TIM_HandleTypeDef htim2; // 32-bit timer
 extern TIM_HandleTypeDef htim4; // 16-bit timer
@@ -50,6 +44,15 @@ public:
         LINK,  // ableton link
         TRANSPORT, // transport pins control tick, reset, start/stop
         MANUAL // app manually calls tick()
+    };
+
+    // How many incoming clock edges make one quarter note.
+    // The capture callback sums this many edges, then divides by PPQN.
+    enum class InputNoteDivision : uint32_t
+    {
+        QUARTER_NOTE = 1,
+        EIGHTH_NOTE = 2,
+        SIXTEENTH_NOTE = 4
     };
 
     Mode mode;
@@ -118,8 +121,10 @@ public:
     float getBPM();
     bool checkIfBpmExceeded();
     void setMode(Mode mode);
+    
     void setInputNoteDivision(InputNoteDivision division);
-    InputNoteDivision mapInputNoteDivision(uint8_t value);
+    static InputNoteDivision mapInputNoteDivision(uint8_t value);
+
     void setStepsPerBar(int steps);
     uint8_t getStepsPerBar();
     void handleStep();
