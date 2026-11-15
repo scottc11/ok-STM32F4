@@ -54,7 +54,8 @@ void Metronome::setMode(Mode mode)
             OK_ERROR_HANDLER(status, "HAL_TIM_Base_Start_IT");
             break;
         case Mode::MIDI:
-            // external midi handler will call tick()
+        case Mode::USB:
+            // The serial MIDI handler (MIDI) or the USB MIDI handler (USB) calls tick().
             // TIM4 becomes a period-measurement + falling-edge timer.
             // Ticks arrive via tick(); the CC1 compare drives the pin low at 50% duty.
             __HAL_TIM_SetAutoreload(&htim4, 0xFFFF); // never wrap between ticks
@@ -476,7 +477,7 @@ void Metronome::tick() {
     if (running == false) return;
 
     // when in MIDI mode, TIM4 becomes a period-measurement + falling-edge timer which needs to be updated with the elapsed time between MIDI ticks
-    if (mode == Mode::MIDI)
+    if (mode == Mode::MIDI || mode == Mode::USB)
     {
         uint32_t elapsed = __HAL_TIM_GetCounter(&htim4); // ticks since last MIDI tick
         __HAL_TIM_SetCounter(&htim4, 0);

@@ -40,8 +40,9 @@ public:
     enum class Mode : uint8_t {
         EXTERNAL,    // follows an external clock signal (square wave)
         INTERNAL, // internal clock (timer overflow)
-        MIDI,  // MIDI clock
+        MIDI,  // serial MIDI clock
         LINK,  // ableton link
+        USB,   // USB MIDI clock
         TRANSPORT, // transport pins control tick, reset, start/stop
         MANUAL // app manually calls tick()
     };
