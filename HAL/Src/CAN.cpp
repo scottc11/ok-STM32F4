@@ -56,7 +56,9 @@ void CAN::init(uint32_t prescaler /*=6*/, uint32_t mode /*=CAN_MODE_NORMAL*/)
     _hcan.Init.AutoWakeUp = DISABLE;
     _hcan.Init.AutoRetransmission = ENABLE;
     _hcan.Init.ReceiveFifoLocked = DISABLE;
-    _hcan.Init.TransmitFifoPriority = DISABLE;
+    // Transmit in request order (not by mailbox number) so Note-Off cannot overtake Note-On
+    // when multiple frames are pending in the three hardware mailboxes.
+    _hcan.Init.TransmitFifoPriority = ENABLE;
 
     status = HAL_CAN_Init(&_hcan);
     OK_ERROR_HANDLER(status, "HAL_CAN_Init");
