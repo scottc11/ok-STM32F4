@@ -14,13 +14,13 @@ struct CANMessage
     bool     extended;   // true => 29-bit extended id, false => 11-bit standard id
 };
 
-// Depth of the RX/TX queues (in frames). Sized generously for bursty MIDI traffic.
+// Depth of the RX/TX queues (in frames). Sized generously for bursty MIDI traffic. Increase these if you need to send more MIDI messages at once.
 #ifndef CAN_RX_QUEUE_DEPTH
-#define CAN_RX_QUEUE_DEPTH 64
+#define CAN_RX_QUEUE_DEPTH 32
 #endif
 
 #ifndef CAN_TX_QUEUE_DEPTH
-#define CAN_TX_QUEUE_DEPTH 64
+#define CAN_TX_QUEUE_DEPTH 32
 #endif
 
 // Task handle + queues exposed to application code.
