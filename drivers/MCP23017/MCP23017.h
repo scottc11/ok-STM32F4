@@ -4,14 +4,18 @@
 mcp.init();
 mcp.setDirection(MCP23017_PORTA, 0xff);
 mcp.setDirection(MCP23017_PORTB, 0b11111111);
-mcp.setInterupt(MCP23017_PORTA, 0xff);
-mcp.setInterupt(MCP23017_PORTB, 0b11111111);
 mcp.setPullUp(MCP23017_PORTA, 0xff);
 mcp.setPullUp(MCP23017_PORTB, 0b01111111);
 mcp.setInputPolarity(MCP23017_PORTA, 0xff);
 mcp.setInputPolarity(MCP23017_PORTB, 0b11111111);
-
-mcp.digitalReadAB(); // clear any stray interupts after configuration
+mcp.setIntCon(MCP23017_PORTA, 0x00); // compare against the previous pin value
+mcp.setIntCon(MCP23017_PORTB, 0x00);
+// Arm interrupt-on-change last. Enabling it asserts INT against the POR
+// compare value, and a GPIO read clears that interrupt then sets it again
+// (datasheet 3.6.4). Read INTCAP after the pins have settled.
+mcp.setInterrupt(MCP23017_PORTA, 0xff);
+mcp.setInterrupt(MCP23017_PORTB, 0b11111111);
+mcp.clearInterrupts();
 
 */
 
@@ -56,7 +60,10 @@ class MCP23017 {
 	void setDirection(char _port, char _value);       // set port pins to input or output.  1 = input, 0 = output	
 	void setPullUp(char _port, char _value);          // activate pin pull-ups
 	void setInputPolarity(char _port, char _value);   // invert pin input polarity
-	void setInterupt(char _port, char _value);        // enable/disable interupts per pin/port
+	void setIntCon(char _port, char _value);          // 1 = compare to DEFVAL, 0 = compare to previous pin
+	void setDefVal(char _port, char _value);          // DEFVAL compare value used when INTCON bit is 1
+	void setInterrupt(char _port, char _value);        // enable/disable interupts per pin/port
+	void clearInterrupts();                           // read INTCAP on both ports to clear INT and latch the baseline
 	void digitalWrite(char _port, char _value);
 	void digitalWrite(char port, int pin, bool set);
 	void digitalToggle(char _port, char _pin);

@@ -26,9 +26,8 @@ void MCP23017::init(void) {
 	// interupt off
 	i2cSend(REG_GPINTEN, 0, 0);
 
-	// clear interrupt
-	digitalRead(MCP23017_PORTA);
-	digitalRead(MCP23017_PORTB);
+	// clear any interrupt left asserted by POR
+	clearInterrupts();
 }
 
 bool MCP23017::isConnected()
@@ -109,13 +108,47 @@ void MCP23017::setInputPolarity(char _port, char _value) {
 }
 
 /**
+ * @brief 1 = compare the pin against DEFVAL, 0 = compare against the previous pin value.
+ * Datasheet 3.5.3: INTCON must be configured when interrupt-on-change is enabled.
+ */
+void MCP23017::setIntCon(char _port, char _value) {
+	i2cSend(REG_INTCON + _port, _value);
+}
+
+/**
+ * @brief Compare value used by pins whose INTCON bit is set.
+ */
+void MCP23017::setDefVal(char _port, char _value) {
+	i2cSend(REG_DEFVAL + _port, _value);
+}
+
+/**
  * If enabled, the MCP23X17 activates the INTn interrupt output when one of the port pins changes state or when a pin does not match the preconfigured default.
  * Additionally, the INTn pins can be configured to mirror each other so that any interrupt will cause both pins to go active. This is controlled via IOCON.MIRROR.
  * There are two interrupt pins: INTA and INTB. By default, INTA is associated with GPAn pins (PORTA) and INTB is associated with GPBn pins (PORTB).
  * NOTE: Each port has an independent signal which is cleared if its associated GPIO or INTCAP register is read.
 **/
-void MCP23017::setInterupt(char _port, char _value) {
+void MCP23017::setInterrupt(char _port, char _value) {
 	i2cSend(REG_GPINTEN + _port, _value );
+}
+
+/**
+ * @brief Clear a pending interrupt and latch the current pins as the IOC baseline.
+ *
+ * Datasheet 3.6.4: INT stays active until INTCAP or GPIO is read, and only the
+ * first change is captured until that read. Reading GPIO while another change
+ * is still pending clears INT and then sets it again, which leaves the pin
+ * low so a falling-edge IRQ never sees the next press. Reading INTCAP clears
+ * INT and the following compare value is the state at that read (3.6.5).
+ * With MIRROR set, both ports have to be read or the mirrored INT pin stays
+ * active (Table 3-6). The second pass clears an interrupt that re-armed
+ * because a pin was still moving during the first read.
+ */
+void MCP23017::clearInterrupts() {
+	i2cRead(REG_INTCAP + MCP23017_PORTA);
+	i2cRead(REG_INTCAP + MCP23017_PORTB);
+	i2cRead(REG_INTCAP + MCP23017_PORTA);
+	i2cRead(REG_INTCAP + MCP23017_PORTB);
 }
 
 /**
