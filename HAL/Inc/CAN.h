@@ -8,6 +8,7 @@
 // message; see MidiCan.h. Do not put any other payload format on the same ID.
 #define OK_CAN_ID_SYSTEM_CLOCK 0x123
 #define OK_CAN_ID_COUNTERPOINT 0x124
+#define OK_CAN_ID_LOGGER       0x125
 
 class CAN {
 public:
