@@ -11,7 +11,7 @@ struct M24256WriteJob
 static QueueHandle_t task_M24256_write_queue = nullptr;
 static TaskHandle_t task_M24256_write_handle = nullptr;
 
-static void task_M24256_start();
+static bool task_M24256_start();
 
 void M24256::init()
 {
@@ -112,8 +112,7 @@ HAL_StatusTypeDef M24256::writeBufferAsync(uint16_t address, const uint8_t *data
     if (length == 0 || data == nullptr)
         return HAL_OK;
 
-    task_M24256_start();
-    if (task_M24256_write_queue == nullptr)
+    if (!task_M24256_start())
         return HAL_ERROR;
 
     // "job" is heap‑allocated with pvPortMalloc, so its lifetime extends beyond the function.
@@ -271,9 +270,7 @@ HAL_StatusTypeDef M24256::massErase()
 
 HAL_StatusTypeDef M24256::massEraseAsync()
 {
-    task_M24256_start();
-
-    if (task_M24256_write_queue == nullptr)
+    if (!task_M24256_start())
         return HAL_ERROR;
 
     // "job" is heap‑allocated with pvPortMalloc, so its lifetime extends beyond the function.
@@ -307,11 +304,6 @@ writeBufferAsync() now copies the payload into a heap‑allocated job and enqueu
 static void task_M24256_bulk_write(void *pvParameters)
 {
     UNUSED(pvParameters);
-
-    if (task_M24256_write_queue == nullptr)
-    {
-        task_M24256_write_queue = xQueueCreate(2, sizeof(M24256WriteJob *));
-    }
 
     while (1)
     {
@@ -374,22 +366,33 @@ static void task_M24256_bulk_write(void *pvParameters)
 }
 
 /**
- * @brief Start the EEPROM write task
- * 
- * This function creates the EEPROM write task if it doesn't already exist.
- * 
- * @return void
+ * @brief Create the write queue, then the EEPROM write task.
+ *
+ * The queue has to exist before this returns. xTaskCreate only schedules
+ * task_M24256_bulk_write; that task does not run until the caller blocks
+ * or a higher-priority task yields. Creating the queue inside the task
+ * left it null for the xQueueSend that follows this call.
+ *
+ * @return true when the queue and task are ready
  */
-static void task_M24256_start()
+static bool task_M24256_start()
 {
+    if (task_M24256_write_queue == nullptr)
+    {
+        task_M24256_write_queue = xQueueCreate(2, sizeof(M24256WriteJob *));
+        if (task_M24256_write_queue == nullptr)
+            return false;
+    }
+
     if (task_M24256_write_handle == nullptr)
     {
-        xTaskCreate(
-            task_M24256_bulk_write,
-            "eeprom_wr",
-            configMINIMAL_STACK_SIZE + 128,
-            nullptr,
-            tskIDLE_PRIORITY + 1, // is this high or low priority?
-            &task_M24256_write_handle);
+        BaseType_t created = xTaskCreate(task_M24256_bulk_write, "eeprom_wr", configMINIMAL_STACK_SIZE + 128, nullptr, tskIDLE_PRIORITY + 1, &task_M24256_write_handle);
+        if (created != pdPASS)
+        {
+            task_M24256_write_handle = nullptr;
+            return false;
+        }
     }
+
+    return true;
 }
