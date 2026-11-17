@@ -23,6 +23,10 @@ struct CANMessage
 #define CAN_TX_QUEUE_DEPTH 32
 #endif
 
+#ifndef CAN_DEBUG
+#define CAN_DEBUG 0
+#endif
+
 // Task handle + queues exposed to application code.
 extern TaskHandle_t th_can_manager;
 extern QueueHandle_t can_rx_queue;
@@ -73,3 +77,4 @@ BaseType_t can_manager_send(const CANMessage &msg, TickType_t timeout = pdMS_TO_
  * @return pdPASS if a frame was dequeued, pdFALSE on timeout
  */
 BaseType_t can_manager_receive(CANMessage *msg, TickType_t timeout = portMAX_DELAY);
+
