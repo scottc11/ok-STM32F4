@@ -35,8 +35,13 @@ static I2CBusState buses[] __attribute__((unused)) = {
     {&i2c3, nullptr, {}, 0, 0},
 };
 
-// expose the task handle to the application code
+// One queue for every bus. Callers that point a request at their own buffer
+// have to keep that buffer alive until the manager finishes the transfer.
+#define I2C_QUEUE_LENGTH 100
+
+// expose the task handle and the shared request queue to the application code
 extern TaskHandle_t th_i2c_manager;
+extern QueueHandle_t i2c_queue;
 
 // I2C manager task
 void task_I2C_manager(void *pvParameters);

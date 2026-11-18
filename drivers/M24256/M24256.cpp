@@ -189,22 +189,59 @@ HAL_StatusTypeDef M24256::readBuffer(uint16_t memAddress, uint8_t *buffer, uint1
 
 /**
  * @brief Read a buffer of data from the EEPROM (non-blocking)
- * 
+ *
+ * The I2C manager gives up on a transfer after 50 ms and does not abort it.
+ * At 400 kHz a single receive of a 48-step sequence (2304 bytes) takes about
+ * 52 ms, so the read is queued as address-then-data pairs of M24256_READ_CHUNK_SIZE.
+ * 128 bytes is about 3 ms.
+ *
  * @param memAddress
  * @param buffer
  * @param length
  */
 HAL_StatusTypeDef M24256::readBufferAsync(uint16_t memAddress, uint8_t *buffer, uint16_t length)
 {
-    static uint8_t write_buffer[2];
-    write_buffer[0] = (uint8_t)(memAddress >> 8);   // MSB of memory address
-    write_buffer[1] = (uint8_t)(memAddress & 0xFF); // LSB of memory address
+    if (length == 0 || buffer == nullptr)
+        return HAL_OK;
 
-    i2c->write(address, write_buffer, 2);
+    const uint16_t chunkSize = M24256_READ_CHUNK_SIZE;
+    const uint16_t numChunks = (length + chunkSize - 1) / chunkSize;
 
-    // submit an asynchronous receive request
-    I2CRequest req{RequestType::Receive, i2c, this->address, buffer, length, nullptr, pdFAIL};
-    return (i2c_submit_async(req) == pdPASS) ? HAL_OK : HAL_BUSY;
+    // Address bytes are not copied by the queue. A ring as long as the queue
+    // cannot overwrite a pair that is still queued: each chunk takes two slots,
+    // so the previous occupant has already been sent.
+    static uint8_t chunkAddr[I2C_QUEUE_LENGTH][2];
+    static uint16_t chunkAddrNext = 0;
+
+    // Queue every address write and its read together, or queue none of them.
+    if (i2c_queue == nullptr || uxQueueSpacesAvailable(i2c_queue) < (UBaseType_t)(numChunks * 2))
+        return HAL_BUSY;
+
+    uint16_t offset = 0;
+    for (uint16_t i = 0; i < numChunks; i++)
+    {
+        uint16_t addr = memAddress + offset;
+        uint16_t n = length - offset;
+        if (n > chunkSize)
+            n = chunkSize;
+
+        uint8_t *addrBytes = chunkAddr[chunkAddrNext];
+        chunkAddrNext = (chunkAddrNext + 1) % I2C_QUEUE_LENGTH;
+        addrBytes[0] = (uint8_t)(addr >> 8);
+        addrBytes[1] = (uint8_t)(addr & 0xFF);
+
+        I2CRequest addrReq{RequestType::Transmit, i2c, this->address, addrBytes, 2, nullptr, pdFAIL};
+        if (i2c_submit_async(addrReq) != pdPASS)
+            return HAL_BUSY;
+
+        I2CRequest dataReq{RequestType::Receive, i2c, this->address, buffer + offset, n, nullptr, pdFAIL};
+        if (i2c_submit_async(dataReq) != pdPASS)
+            return HAL_BUSY;
+
+        offset += n;
+    }
+
+    return HAL_OK;
 }
 
 /**

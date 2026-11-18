@@ -19,7 +19,7 @@ void task_I2C_manager(void *pvParameters)
 
     if (!i2c_queue)
     {
-        i2c_queue = xQueueCreate(100, sizeof(I2CRequest));
+        i2c_queue = xQueueCreate(I2C_QUEUE_LENGTH, sizeof(I2CRequest));
     }
 
     TickType_t last_wake_time = xTaskGetTickCount();
