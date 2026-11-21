@@ -8,162 +8,210 @@
 #include <stdint.h>
 #include "utils.h"
 
-#define NOTE_DATA_LENGTH 144
+#define NOTE_DATA_LENGTH 168
 
 enum Note {
-    C0 = 0,
-    C0_SHARP = 1,
-    D0 = 2,
-    D0_SHARP = 3,
-    E0 = 4,
-    F0 = 5,
-    F0_SHARP = 6,
-    G0 = 7,
-    G0_SHARP = 8,
-    A0 = 9,
-    A0_SHARP = 10,
-    B0 = 11,
-    C1 = 12,
-    C1_SHARP = 13,
-    D1 = 14,
-    D1_SHARP = 15,
-    E1 = 16,
-    F1 = 17,
-    F1_SHARP = 18,
-    G1 = 19,
-    G1_SHARP = 20,
-    A1 = 21,
-    A1_SHARP = 22,
-    B1 = 23,
-    C2 = 24,
-    C2_SHARP = 25,
-    D2 = 26,
-    D2_SHARP = 27,
-    E2 = 28,
-    F2 = 29,
-    F2_SHARP = 30,
-    G2 = 31,
-    G2_SHARP = 32,
-    A2 = 33,
-    A2_SHARP = 34,
-    B2 = 35,
-    C3 = 36,
-    C3_SHARP = 37,
-    D3 = 38,
-    D3_SHARP = 39,
-    E3 = 40,
-    F3 = 41,
-    F3_SHARP = 42,
-    G3 = 43,
-    G3_SHARP = 44,
-    A3 = 45,
-    A3_SHARP = 46,
-    B3 = 47,
-    C4 = 48,
-    C4_SHARP = 49,
-    D4 = 50,
-    D4_SHARP = 51,
-    E4 = 52,
-    F4 = 53,
-    F4_SHARP = 54,
-    G4 = 55,
-    G4_SHARP = 56,
-    A4 = 57,
-    A4_SHARP = 58,
-    B4 = 59,
-    C5 = 60,
-    C5_SHARP = 61,
-    D5 = 62,
-    D5_SHARP = 63,
-    E5 = 64,
-    F5 = 65,
-    F5_SHARP = 66,
-    G5 = 67,
-    G5_SHARP = 68,
-    A5 = 69,
-    A5_SHARP = 70,
-    B5 = 71,
-    C6 = 72,
-    C6_SHARP = 73,
-    D6 = 74,
-    D6_SHARP = 75,
-    E6 = 76,
-    F6 = 77,
-    F6_SHARP = 78,
-    G6 = 79,
-    G6_SHARP = 80,
-    A6 = 81,
-    A6_SHARP = 82,
-    B6 = 83,
-    C7 = 84,
-    C7_SHARP = 85,
-    D7 = 86,
-    D7_SHARP = 87,
-    E7 = 88,
-    F7 = 89,
-    F7_SHARP = 90,
-    G7 = 91,
-    G7_SHARP = 92,
-    A7 = 93,
-    A7_SHARP = 94,
-    B7 = 95,
-    C8 = 96,
-    C8_SHARP = 97,
-    D8 = 98,
-    D8_SHARP = 99,
-    E8 = 100,
-    F8 = 101,
-    F8_SHARP = 102,
-    G8 = 103,
-    G8_SHARP = 104,
-    A8 = 105,
-    A8_SHARP = 106,
-    B8 = 107,
-    C9 = 108,
-    C9_SHARP = 109,
-    D9 = 110,
-    D9_SHARP = 111,
-    E9 = 112,
-    F9 = 113,
-    F9_SHARP = 114,
-    G9 = 115,
-    G9_SHARP = 116,
-    A9 = 117,
-    A9_SHARP = 118,
-    B9 = 119,
-    C10 = 120,
-    C10_SHARP = 121,
-    D10 = 122,
-    D10_SHARP = 123,
-    E10 = 124,
-    F10 = 125,
-    F10_SHARP = 126,
-    G10 = 127,
-    G10_SHARP = 128,
-    A10 = 129,
-    A10_SHARP = 130,
-    B10 = 131,
-    C11 = 132,
-    C11_SHARP = 133,
-    D11 = 134,
-    D11_SHARP = 135,
-    E11 = 136,
-    F11 = 137,
-    F11_SHARP = 138,
-    G11 = 139,
-    G11_SHARP = 140,
-    A11 = 141,
-    A11_SHARP = 142,
-    B11 = 143
+    C_NEG2 = 0,
+    C_NEG2_SHARP = 1,
+    D_NEG2 = 2,
+    D_NEG2_SHARP = 3,
+    E_NEG2 = 4,
+    F_NEG2 = 5,
+    F_NEG2_SHARP = 6,
+    G_NEG2 = 7,
+    G_NEG2_SHARP = 8,
+    A_NEG2 = 9,
+    A_NEG2_SHARP = 10,
+    B_NEG2 = 11,
+    C_NEG1 = 12,
+    C_NEG1_SHARP = 13,
+    D_NEG1 = 14,
+    D_NEG1_SHARP = 15,
+    E_NEG1 = 16,
+    F_NEG1 = 17,
+    F_NEG1_SHARP = 18,
+    G_NEG1 = 19,
+    G_NEG1_SHARP = 20,
+    A_NEG1 = 21,
+    A_NEG1_SHARP = 22,
+    B_NEG1 = 23,
+    C0 = 24,
+    C0_SHARP = 25,
+    D0 = 26,
+    D0_SHARP = 27,
+    E0 = 28,
+    F0 = 29,
+    F0_SHARP = 30,
+    G0 = 31,
+    G0_SHARP = 32,
+    A0 = 33,
+    A0_SHARP = 34,
+    B0 = 35,
+    C1 = 36,
+    C1_SHARP = 37,
+    D1 = 38,
+    D1_SHARP = 39,
+    E1 = 40,
+    F1 = 41,
+    F1_SHARP = 42,
+    G1 = 43,
+    G1_SHARP = 44,
+    A1 = 45,
+    A1_SHARP = 46,
+    B1 = 47,
+    C2 = 48,
+    C2_SHARP = 49,
+    D2 = 50,
+    D2_SHARP = 51,
+    E2 = 52,
+    F2 = 53,
+    F2_SHARP = 54,
+    G2 = 55,
+    G2_SHARP = 56,
+    A2 = 57,
+    A2_SHARP = 58,
+    B2 = 59,
+    C3 = 60,
+    C3_SHARP = 61,
+    D3 = 62,
+    D3_SHARP = 63,
+    E3 = 64,
+    F3 = 65,
+    F3_SHARP = 66,
+    G3 = 67,
+    G3_SHARP = 68,
+    A3 = 69,
+    A3_SHARP = 70,
+    B3 = 71,
+    C4 = 72,
+    C4_SHARP = 73,
+    D4 = 74,
+    D4_SHARP = 75,
+    E4 = 76,
+    F4 = 77,
+    F4_SHARP = 78,
+    G4 = 79,
+    G4_SHARP = 80,
+    A4 = 81,
+    A4_SHARP = 82,
+    B4 = 83,
+    C5 = 84,
+    C5_SHARP = 85,
+    D5 = 86,
+    D5_SHARP = 87,
+    E5 = 88,
+    F5 = 89,
+    F5_SHARP = 90,
+    G5 = 91,
+    G5_SHARP = 92,
+    A5 = 93,
+    A5_SHARP = 94,
+    B5 = 95,
+    C6 = 96,
+    C6_SHARP = 97,
+    D6 = 98,
+    D6_SHARP = 99,
+    E6 = 100,
+    F6 = 101,
+    F6_SHARP = 102,
+    G6 = 103,
+    G6_SHARP = 104,
+    A6 = 105,
+    A6_SHARP = 106,
+    B6 = 107,
+    C7 = 108,
+    C7_SHARP = 109,
+    D7 = 110,
+    D7_SHARP = 111,
+    E7 = 112,
+    F7 = 113,
+    F7_SHARP = 114,
+    G7 = 115,
+    G7_SHARP = 116,
+    A7 = 117,
+    A7_SHARP = 118,
+    B7 = 119,
+    C8 = 120,
+    C8_SHARP = 121,
+    D8 = 122,
+    D8_SHARP = 123,
+    E8 = 124,
+    F8 = 125,
+    F8_SHARP = 126,
+    G8 = 127,
+    G8_SHARP = 128,
+    A8 = 129,
+    A8_SHARP = 130,
+    B8 = 131,
+    C9 = 132,
+    C9_SHARP = 133,
+    D9 = 134,
+    D9_SHARP = 135,
+    E9 = 136,
+    F9 = 137,
+    F9_SHARP = 138,
+    G9 = 139,
+    G9_SHARP = 140,
+    A9 = 141,
+    A9_SHARP = 142,
+    B9 = 143,
+    C10 = 144,
+    C10_SHARP = 145,
+    D10 = 146,
+    D10_SHARP = 147,
+    E10 = 148,
+    F10 = 149,
+    F10_SHARP = 150,
+    G10 = 151,
+    G10_SHARP = 152,
+    A10 = 153,
+    A10_SHARP = 154,
+    B10 = 155,
+    C11 = 156,
+    C11_SHARP = 157,
+    D11 = 158,
+    D11_SHARP = 159,
+    E11 = 160,
+    F11 = 161,
+    F11_SHARP = 162,
+    G11 = 163,
+    G11_SHARP = 164,
+    A11 = 165,
+    A11_SHARP = 166,
+    B11 = 167
 };
 
 typedef struct
 {
     float frequency;
-    uint8_t midi;
+    int16_t midi;
 } NoteData;
 
 const NoteData NOTE_DATA_MAP[NOTE_DATA_LENGTH] = {
+    {4.09, -12}, // C-2
+    {4.33, -11}, // C#-2/Db-2
+    {4.59, -10}, // D-2
+    {4.86, -9}, // D#-2/Eb-2
+    {5.15, -8}, // E-2
+    {5.46, -7}, // F-2
+    {5.78, -6}, // F#-2/Gb-2
+    {6.12, -5}, // G-2
+    {6.49, -4}, // G#-2/Ab-2
+    {6.88, -3}, // A-2
+    {7.28, -2}, // A#-2/Bb-2
+    {7.72, -1}, // B-2
+    {8.18, 0}, // C-1
+    {8.66, 1}, // C#-1/Db-1
+    {9.18, 2}, // D-1
+    {9.72, 3}, // D#-1/Eb-1
+    {10.30, 4}, // E-1
+    {10.91, 5}, // F-1
+    {11.56, 6}, // F#-1/Gb-1
+    {12.25, 7}, // G-1
+    {12.98, 8}, // G#-1/Ab-1
+    {13.75, 9}, // A-1
+    {14.57, 10}, // A#-1/Bb-1
+    {15.43, 11}, // B-1
     {16.352, 12}, // C0
     {17.324, 13}, // C#0/Db0
     {18.354, 14}, // D0
@@ -311,6 +359,30 @@ const NoteData NOTE_DATA_MAP[NOTE_DATA_LENGTH] = {
 };
 
 const float NOTE_FREQ_MAP[NOTE_DATA_LENGTH] = {
+    4.09,  //  C-2
+    4.33,  //  C#-2/Db-2
+    4.59,  //  D-2
+    4.86,  //  D#-2/Eb-2
+    5.15,  //  E-2
+    5.46,  //  F-2
+    5.78,  //  F#-2/Gb-2
+    6.12,  //  G-2
+    6.49,  //  G#-2/Ab-2
+    6.88,  //  A-2
+    7.28,  //  A#-2/Bb-2
+    7.72,  //  B-2
+    8.18,  //  C-1
+    8.66,  //  C#-1/Db-1
+    9.18,  //  D-1
+    9.72,  //  D#-1/Eb-1
+    10.30,  //  E-1
+    10.91,  //  F-1
+    11.56,  //  F#-1/Gb-1
+    12.25,  //  G-1
+    12.98,  //  G#-1/Ab-1
+    13.75,  //  A-1
+    14.57,  //  A#-1/Bb-1
+    15.43,  //  B-1
     16.352,  //  C0
     17.324,  //  C#0/Db0
     18.354,  //  D0
@@ -460,6 +532,30 @@ const float NOTE_FREQ_MAP[NOTE_DATA_LENGTH] = {
 // 5-limit just intonation frequency map rooted on C.
 // Ratios: 1/1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 9/5, 15/8
 const float NOTE_FREQ_MAP_JUST[NOTE_DATA_LENGTH] = {
+    4.09,    //  C-2
+    4.36,    //  C#-2/Db-2
+    4.60,    //  D-2
+    4.91,    //  D#-2/Eb-2
+    5.11,    //  E-2
+    5.45,    //  F-2
+    5.75,    //  F#-2/Gb-2
+    6.13,    //  G-2
+    6.54,    //  G#-2/Ab-2
+    6.81,    //  A-2
+    7.36,    //  A#-2/Bb-2
+    7.66,    //  B-2
+    8.18,    //  C-1
+    8.72,    //  C#-1/Db-1
+    9.20,    //  D-1
+    9.81,    //  D#-1/Eb-1
+    10.22,    //  E-1
+    10.90,    //  F-1
+    11.50,    //  F#-1/Gb-1
+    12.26,    //  G-1
+    13.08,    //  G#-1/Ab-1
+    13.63,    //  A-1
+    14.72,    //  A#-1/Bb-1
+    15.33,    //  B-1
     16.35,    //  C0
     17.44,    //  C#0/Db0
     18.40,    //  D0
@@ -608,6 +704,6 @@ const float NOTE_FREQ_MAP_JUST[NOTE_DATA_LENGTH] = {
 
 float getNoteFrequency(Note note);
 
-uint8_t getNoteMidi(Note note);
+int16_t getNoteMidi(Note note);
 
 Note getNoteIndexFromMidi(uint8_t midi);
